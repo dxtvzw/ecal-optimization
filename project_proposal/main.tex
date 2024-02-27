@@ -8,6 +8,7 @@
 \usepackage{textcomp}
 \usepackage{xcolor}
 \usepackage{hyperref}
+\usepackage{verbatim}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
@@ -24,16 +25,20 @@ azimanov@edu.hse.ru}
 }
 
 \maketitle
-
+%TC:ignore
 \begin{abstract}
     In the exploration of fundamental particles, the accuracy of energy measurement is paramount. This research presents a novel approach to optimizing sensor sizes within Electromagnetic Calorimeters (ECAL) at the Large Hadron Collider (LHC) for the precise reconstruction of photon energies. Leveraging deep learning techniques, particularly those adapted from the field of computer vision, we aim to identify an optimal sensor matrix configuration that maximizes energy reconstruction accuracy while considering cost constraints. By introducing a model architecture capable of accommodating various sensor sizes, this study explores the balance between high-resolution measurements and economic feasibility. Preliminary results suggest that a tailored deep learning model can significantly enhance sensor design, offering a promising avenue for future experimental physics setups. This work not only contributes to the ongoing discourse on sensor optimization but also exemplifies the potential of deep learning in advancing particle physics research.
 \end{abstract}
+%TC:endignore
 
+%TC:ignore
 \begin{IEEEkeywords}
     Particle Physics, Sensor Optimization, Deep Learning, Computer Vision, Photon Energy Reconstruction, LHC, ECAL.
 \end{IEEEkeywords}
+%TC:endignore
 
 \section{Introduction}
+
 The intersection of particle physics, sensor technology, and artificial intelligence foreshadows a new era in experimental setups, particularly in the context of high-energy physics experiments such as those conducted at the Large Hadron Collider\footnote{https://en.wikipedia.org/wiki/Large\_Hadron\_Collider} (LHC). At the core of these experiments lies the challenge of accurately measuring the energies of particles, a task that is critical for advancing our understanding of the fundamental laws of physics. This research focuses on optimizing the size of sensors within Electromagnetic Calorimeters (ECAL), crucial for reconstructing the energies of photons, leveraging the advancements in deep learning to achieve unprecedented precision.
 
 The accurate reconstruction of photon energies is a cornerstone for numerous analyses in particle physics. However, the physical design and cost constraints of ECAL sensors pose significant challenges. The trade-off between sensor resolution and the economic feasibility of high-resolution sensors necessitates a sophisticated approach to sensor design. This research addresses the challenge of identifying an optimal sensor size that ensures precise energy measurements without incurring prohibitive costs. The significance of this pursuit cannot be overstated, as it directly impacts the feasibility and success of future high-energy physics experiments.
@@ -48,9 +53,11 @@ We anticipate that our deep learning model will enable the identification of an 
 
 The remainder of this paper is organized as follows: Section~\ref{main_body:literature_review} provides a detailed literature review, highlighting key advancements and identifying gaps our research aims to fill. Section~\ref{main_body:methodology} describes our methodology, including the data acquisition process, model design, and experimental setup. Section~\ref{main_body:results} presents the results of our experiments, analyzing the performance of different sensor sizes and model configurations. Finally, Section~\ref{conclusion} concludes the paper with a discussion of our findings, their implications, and directions for future research.
 
-\section{Main Body}\label{main_body}
+\section{Main Body}
+\label{main_body}
 
-\subsection{Literature Review}\label{main_body:literature_review}
+\subsection{Literature Review}
+\label{main_body:literature_review}
 
 \subsubsection{Calorimetry with Deep Learning: Particle Simulation and Reconstruction for Collider Physics}
 
@@ -68,7 +75,9 @@ Focusing on the reconstruction of highly Lorentz-boosted particle decays, this p
 
 Our research introduces a novel deep learning model designed to optimize sensor size for photon energy reconstruction in the LHC's ECAL, marking a distinct departure from the primary focus of the aforementioned studies. Unlike the general application of deep learning for particle identification, simulation, or reconstruction, our approach specifically targets the physical configuration of sensors, aiming to find an optimal balance between sensor resolution and cost-efficiency. This involves not only the application of deep learning to particle physics but also an innovative integration of model architecture adjustments to accommodate varying sensor sizes. Our work contributes a unique perspective by directly linking deep learning model performance with the practical considerations of sensor design and fabrication in high-energy physics experiments, thereby filling a gap in the current literature on the intersection of machine learning and experimental physics setup optimization.
 
-\subsection{Methodology}\label{main_body:methodology}
+\subsection{Methodology}
+\label{main_body:methodology}
+
 Our methodology centers on developing a novel deep learning architecture tailored for optimizing sensor size in the context of particle physics experiments, particularly focusing on energy reconstruction of photons in the Large Hadron Collider's (LHC) Electromagnetic Calorimeter (ECAL).
 
 The primary objective is to devise a deep learning model capable of accurately reconstructing the initial energy of photons across a spectrum of sensor sizes, thereby identifying an optimal sensor configuration that offers a reasonable balance between performance and cost.
@@ -81,11 +90,13 @@ The proposed model architecture incorporates initial layers designed to adjust t
 
 Key challenges encountered during the study include ensuring the model's adaptability to diverse sensor sizes and configurations, as well as addressing the computational complexities associated with processing large-scale datasets. Additionally, the study considers the economic implications of sensor design choices, recognizing the need to balance technical performance with cost-efficiency in sensor manufacturing.
 
-\subsection{Results}\label{main_body:results}
+\subsection{Results}
+\label{main_body:results}
 
 The results section will detail the outcomes of the model's performance evaluation, highlighting the relationship between sensor size and reconstruction accuracy. It will provide insights into the optimal sensor configurations identified through the study, based on a comprehensive analysis of the trade-offs between resolution enhancement, cost, and practical feasibility. The section will also address any disagreements or unexpected findings that emerged during the research, offering a nuanced understanding of the factors influencing sensor size optimization in particle physics experiments.
 
-\section{Conclusion}\label{conclusion}
+\section{Conclusion}
+\label{conclusion}
 
 This research intended to bridge the gap between the fields of deep learning and particle physics, with a specific focus on optimizing sensor sizes within the Large Hadron Collider's Electromagnetic Calorimeter (ECAL). The primary aim was to develop a deep learning model capable of accurately reconstructing the initial energy of photons across various sensor sizes, thereby identifying an optimal balance between sensor performance and cost.
 
@@ -99,7 +110,15 @@ Another promising direction involves the collaboration with sensor manufacturers
 
 In conclusion, this research represents a significant step forward in the quest to optimize sensor sizes for particle physics experiments. By leveraging deep learning models, this study not only offers a novel solution to a longstanding challenge but also opens up new possibilities for enhancing the precision and cost-effectiveness of scientific investigations in this field.
 
+\vspace{12pt}
+
+% texcount -1 -sub=section main.tex
+
+\rightline{Word Count: 1672}
+
+%TC:ignore
 \bibliographystyle{IEEEtran}
 \bibliography{refs}
+%TC:endignore
 
 \end{document}
