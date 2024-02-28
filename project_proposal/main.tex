@@ -39,7 +39,7 @@ azimanov@edu.hse.ru}
 
 \section{Introduction}
 
-The intersection of particle physics, sensor technology, and artificial intelligence foreshadows a new era in experimental setups, particularly in the context of high-energy physics experiments such as those conducted at the Large Hadron Collider\footnote{https://en.wikipedia.org/wiki/Large\_Hadron\_Collider} (LHC). At the core of these experiments lies the challenge of accurately measuring the energies of particles, a task that is critical for advancing our understanding of the fundamental laws of physics. This research focuses on optimizing the size of sensors within Electromagnetic Calorimeters (ECAL), crucial for reconstructing the energies of photons, leveraging the advancements in deep learning to achieve unprecedented precision.
+The intersection of particle physics, sensor technology, and artificial intelligence foreshadows a new era in experimental setups, particularly in the context of high-energy physics experiments such as those conducted at the Large Hadron Collider\footnote{https://en.wikipedia.org/wiki/Large\_Hadron\_Collider} (LHC). At the core of these experiments lies the challenge of accurately measuring the energies of particles, a task that is critical for advancing our understanding of the fundamental laws of physics. This research focuses on optimizing the size of sensors within Electromagnetic Calorimeters\footnote{https://en.wikipedia.org/wiki/Calorimeter\_(particle\_physics)} (ECAL), crucial for reconstructing the energies of photons, leveraging the advancements in deep learning to achieve unprecedented precision.
 
 The accurate reconstruction of photon energies is a cornerstone for numerous analyses in particle physics. However, the physical design and cost constraints of ECAL sensors pose significant challenges. The trade-off between sensor resolution and the economic feasibility of high-resolution sensors necessitates a sophisticated approach to sensor design. This research addresses the challenge of identifying an optimal sensor size that ensures precise energy measurements without incurring prohibitive costs. The significance of this pursuit cannot be overstated, as it directly impacts the feasibility and success of future high-energy physics experiments.
 
@@ -61,15 +61,15 @@ The remainder of this paper is organized as follows: Section~\ref{main_body:lite
 
 \subsubsection{Calorimetry with Deep Learning: Particle Simulation and Reconstruction for Collider Physics}
 
-This paper~\cite{Belayneh_2020} delves into the application of deep learning for simulating and reconstructing particle showers in calorimeters, a crucial component in high-energy physics experiments. The authors develop two neural network models; one for end-to-end reconstruction that identifies particles and estimates their energy from calorimeter data, and another generative model for simulating calorimeter showers. These models, trained on detailed shower simulations, outperform existing algorithms, showcasing the potential of deep learning in enhancing the simulation and reconstruction processes in particle physics. Moreover, the adaptability of the reconstruction model to different detector geometries highlights the versatility and computational efficiency of deep learning approaches in this field.
+This paper~\cite{Belayneh_2020} explores the utilization of deep learning for simulating and reconstructing particles in high-energy physics collisions. By training neural networks with detailed simulations of calorimeter showers, the authors demonstrate substantial improvements over existing algorithms in both simulation and reconstruction tasks. Their approach includes an end-to-end reconstruction network for particle identification and energy regression, and a generative network for modeling calorimeter showers. The networks show versatility across different detector geometries, presenting a fast, efficient alternative for particle shower simulation and reconstruction.
 
 \subsubsection{Towards a Computer Vision Particle Flow}
 
-This study~\cite{Di_Bello_2021} introduces a computer vision-based method to improve Particle Flow (PFlow) algorithms, which are essential for reconstructing the nature and kinematics of particles in high-energy physics experiments. By differentiating the calorimeter energy deposits of neutral particles from those of charged particles, the research achieves a more accurate reconstruction of neutral particle energy deposits, even in scenarios with significant overlap with charged particle deposits. The application of state-of-the-art deep learning techniques and super-resolution to enhance calorimeter image granularity further underscores the potential of computer vision in refining PFlow algorithms.
+This study~\cite{Di_Bello_2021} introduces a computer vision-based approach to Particle Flow (PFlow) algorithms, aiming to improve the reconstruction of neutral particle calorimeter energy deposits amidst large overlaps with charged particles. By leveraging deep learning techniques on calorimeter images, the authors achieve significant enhancements in distinguishing between neutral and charged particle deposits. Additionally, they employ super-resolution techniques to increase the granularity of calorimeter images, further refining the reconstruction process.
 
 \subsubsection{Reconstruction of Decays to Merged Photons Using End-to-End Deep Learning with Domain Continuation in the CMS Detector}
 
-Focusing on the reconstruction of highly Lorentz-boosted particle decays, this paper~\cite{PhysRevD.108.052002} presents a groundbreaking machine learning technique that forgoes traditional rule-based methods for particle reconstruction. By employing an end-to-end deep learning approach that processes minimally modified detector data to directly output particle properties, the study showcases a novel method for the invariant mass reconstruction of particles, specifically through the decay channel $\mathcal{A} \to \gamma \gamma$. The use of domain continuation in training enables the effective reconstruction of unresolved photon pairs, offering a new avenue for analyzing particle decays in high-energy physics.
+This paper~\cite{PhysRevD.108.052002} presents an innovative machine learning technique for reconstructing decays of highly Lorentz-boosted particles, specifically focusing on the reconstruction of invariant mass in merged photon decays. By employing an end-to-end deep learning strategy with domain continuation, the authors bypass traditional rule-based reconstruction methods, enabling direct reconstruction of particle properties from minimally processed detector data. This technique showcases the potential of deep learning in resolving complex particle interactions, particularly in scenarios where photons are closely merged.
 
 \subsubsection{Novelty of Our Approach}
 
@@ -114,7 +114,7 @@ In conclusion, this research represents a significant step forward in the quest 
 
 % texcount -1 -sub=section main.tex
 
-\rightline{Word Count: 1672}
+\rightline{Word Count: 1619}
 
 %TC:ignore
 \bibliographystyle{IEEEtran}
