@@ -48,68 +48,104 @@ def get_model_size(model):
 class Loss1(nn.Module):
     name = "RMSE_E"
 
-    def __init__(self):
+    def __init__(self, reduction='mean'):
         super(Loss1, self).__init__()
+        self.reduction = reduction
     
     def forward(self, pred, trg):
-        return torch.sqrt(torch.mean(((pred - trg) / trg) ** 2))
+        loss = ((pred - trg) / trg) ** 2
+        if self.reduction == 'none':
+            return torch.sqrt(loss)
+        elif self.reduction == 'sum':
+            return torch.sqrt(loss.sum())
+        else:
+            return torch.sqrt(loss.mean())
 
 
 class Loss2(nn.Module):
     name = "MAE_E"
 
-    def __init__(self):
+    def __init__(self, reduction='mean'):
         super(Loss2, self).__init__()
+        self.reduction = reduction
     
     def forward(self, pred, trg):
-        return torch.mean(torch.abs((pred - trg) / trg))
+        loss = torch.abs((pred - trg) / trg)
+        if self.reduction == 'none':
+            return loss
+        elif self.reduction == 'sum':
+            return loss.sum()
+        else:
+            return loss.mean()
 
 
 class Loss3(nn.Module):
     name = "MSE"
 
-    def __init__(self):
+    def __init__(self, reduction='mean'):
         super(Loss3, self).__init__()
+        self.reduction = reduction
     
     def forward(self, pred, trg):
-        return F.mse_loss(pred, trg)
+        return F.mse_loss(pred, trg, reduction=self.reduction)
 
 
 class Loss4(nn.Module):
     name = "MAE"
 
-    def __init__(self):
+    def __init__(self, reduction='mean'):
         super(Loss4, self).__init__()
+        self.reduction = reduction
     
     def forward(self, pred, trg):
-        return torch.mean(torch.abs(pred - trg))
+        loss = torch.abs(pred - trg)
+        if self.reduction == 'none':
+            return loss
+        elif self.reduction == 'sum':
+            return loss.sum()
+        else:
+            return loss.mean()
 
 
 class Loss5(nn.Module):
     name = "RMSLE"
 
-    def __init__(self):
+    def __init__(self, reduction='mean'):
         super(Loss5, self).__init__()
+        self.reduction = reduction
     
     def forward(self, pred, trg):
-        return torch.sqrt(F.mse_loss(torch.log(pred + 1), torch.log(trg + 1)))
+        loss = F.mse_loss(torch.log(pred + 1), torch.log(trg + 1), reduction='none')
+        if self.reduction == 'none':
+            return torch.sqrt(loss)
+        elif self.reduction == 'sum':
+            return torch.sqrt(loss.sum())
+        else:
+            return torch.sqrt(loss.mean())
 
 
 class Loss6(nn.Module):
     name = "RR" # Relative relation
 
-    def __init__(self):
+    def __init__(self, reduction='mean'):
         super(Loss6, self).__init__()
+        self.reduction = reduction
     
     def forward(self, pred, trg):
-        return torch.mean((pred - trg) / trg)
+        loss = (pred - trg) / trg
+        if self.reduction == 'none':
+            return loss
+        elif self.reduction == 'sum':
+            return loss.sum()
+        else:
+            return loss.mean()
 
 
-def get_loss_fn(loss_name):
+def get_loss_fn(loss_name, reduction="mean"):
     all_losses = [Loss1, Loss2, Loss3, Loss4, Loss5, Loss6]
     for LossClass in all_losses:
         if LossClass.name == loss_name:
-            return LossClass()
+            return LossClass(reduction=reduction)
     raise RuntimeError(f"Invalid loss function: {loss_name}")
 
 
@@ -130,12 +166,15 @@ def compute_metrics(model, val_loader, cfg, loss_fns=["RMSE_E", "MAE_E", "RMSLE"
         all_targets = torch.cat(all_targets, dim=0)
 
         metrics = {}
+        no_reduce_metrics = {}
         
         for loss_name in loss_fns:
             loss_fn = get_loss_fn(loss_name)
+            loss_fn_no_reduce = get_loss_fn(loss_name, "none")
             metrics[loss_name] = loss_fn(all_outputs, all_targets).item()
- 
-    return metrics
+            no_reduce_metrics[loss_name] = loss_fn_no_reduce(all_outputs, all_targets).cpu().numpy().tolist()
+
+    return all_outputs, all_targets, metrics, no_reduce_metrics
 
 
 def namespace_to_dict(obj):

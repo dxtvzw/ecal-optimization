@@ -183,7 +183,7 @@ def get_model(cfg, logger):
     
     model = model.to(cfg.device)
 
-    optimizer = torch.optim.Adam(
+    optimizer = torch.optim.AdamW(
         model.parameters(),
         lr=cfg.training.optimizer.learning_rate,
         weight_decay=cfg.training.optimizer.weight_decay,

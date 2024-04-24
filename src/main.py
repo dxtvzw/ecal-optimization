@@ -33,6 +33,13 @@ def train_fn(
                 result += " || "
             result += f"{name}: {value:0.4f}"
         return result
+    
+    def log_plots(epoch, val_outputs, val_targets, no_reduce_metrics):
+        logger.info("Logging plots to wandb")
+        for name, value in no_reduce_metrics.items():
+            data = [[x, y] for (x, y) in zip(val_targets, value)]
+            table = wandb.Table(data=data, columns=["Energy", f"{name} Loss"])
+            wandb.log({f"scatter_{name}": wandb.plot.scatter(table, "Energy",  f"{name} Loss")}, step=epoch)
 
     all_val_losses = []
 
@@ -86,7 +93,7 @@ def train_fn(
 
         all_val_losses.append(val_loss)
 
-        metrics = compute_metrics(
+        val_outputs, val_targets, metrics, no_reduce_metrics = compute_metrics(
             model=model,
             val_loader=val_loader,
             cfg=cfg,
@@ -101,6 +108,9 @@ def train_fn(
                 "lr": get_lr(optimizer),
                 **metrics,
             }, step=epoch)
+            
+            if (epoch == cfg.training.num_epochs) or (epoch % cfg.logging.log_plot_freq == 0):
+                log_plots(epoch, val_outputs, val_targets, no_reduce_metrics)
 
         if scheduler is not None:
             scheduler.step()
