@@ -109,7 +109,7 @@ def train_fn(
                 **metrics,
             }, step=epoch)
             
-            if (epoch == cfg.training.num_epochs) or (epoch % cfg.logging.log_plot_freq == 0):
+            if (cfg.logging.log_plot_freq != -1) and ((epoch == cfg.training.num_epochs) or (epoch % cfg.logging.log_plot_freq == 0)):
                 log_plots(epoch, val_outputs, val_targets, no_reduce_metrics)
 
         if scheduler is not None:
