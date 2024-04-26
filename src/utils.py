@@ -149,6 +149,9 @@ def get_loss_fn(loss_name, reduction="mean"):
     raise RuntimeError(f"Invalid loss function: {loss_name}")
 
 
+from tqdm.auto import tqdm
+
+
 def compute_metrics(model, val_loader, cfg, loss_fns=["RMSE_E", "MAE_E", "RMSLE", "RR"]):
     model.eval()
     

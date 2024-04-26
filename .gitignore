@@ -284,3 +284,4 @@ undergraduate_practice/signed/
 *.tar
 src/wandb
 *__pycache__*
+src/data_numpy/

@@ -62,7 +62,16 @@ class LinearModel(nn.Module):
 
 
 class MyModel(nn.Module):
-    def __init__(self, height=15, width=15, n_scales=7, hidden_dim=4, output_positive=True, **kwargs) -> None:
+    def __init__(
+            self,
+            height=15,
+            width=15,
+            n_scales=7,
+            hidden_dim=4,
+            output_positive=True,
+            dropout=0.1,
+            **kwargs,
+    ) -> None:
         super(MyModel, self).__init__()
 
         self.height = height
@@ -72,6 +81,7 @@ class MyModel(nn.Module):
 
         self.n_scales = n_scales
         self.hidden_dim = hidden_dim
+        self.dropout_prob = dropout
         self.scales = [0.5 ** i for i in range(self.n_scales)]
 
         self.models = []
@@ -85,6 +95,7 @@ class MyModel(nn.Module):
             nn.Linear(self.height * self.width, self.hidden_dim),
             nn.GELU(),
             nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.Dropout(self.dropout_prob),
         )
         return layer
 
@@ -103,6 +114,7 @@ class MyModel(nn.Module):
                 result = torch.cat((result, current), dim=1)
 
         result = result.mean(dim=1)
+        result = result.flatten()
 
         if self.output_positive:
             result = F.softplus(result)
@@ -137,10 +149,55 @@ class MyResnet18(nn.Module):
         x = x.view(batch_size, 1, self.height, self.width)
         
         result = self.model(x)
+        result = result.flatten()
 
         if self.output_positive:
             result = F.softplus(result)
         return result
+
+
+class MyCNN(nn.Module):
+    def __init__(self, height=15, width=15, hidden_dim=100, output_positive=True, **kwargs):
+        super(MyCNN, self).__init__()
+        self.height = height
+        self.width = width
+        self.output_positive = output_positive
+        
+        self.conv1 = nn.Conv2d(1, 16, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(16, 32, kernel_size=3, padding=1)
+        self.conv3 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
+        
+        self.pool = nn.MaxPool2d(2, 2)
+        
+        self._to_linear = None
+        self._mock_forward_pass(height, width)
+        
+        self.fc1 = nn.Linear(self._to_linear, hidden_dim)
+        self.fc2 = nn.Linear(hidden_dim, 1)
+
+    def _mock_forward_pass(self, width, height):
+        dummy_x = torch.zeros((1, 1, width, height))
+        dummy_x = self.pool(F.relu(self.conv1(dummy_x)))
+        dummy_x = self.pool(F.relu(self.conv2(dummy_x)))
+        dummy_x = self.pool(F.relu(self.conv3(dummy_x)))
+        self._to_linear = int(torch.numel(dummy_x))
+        
+    def forward(self, x):
+        x = self.pool(F.relu(self.conv1(x)))
+        x = self.pool(F.relu(self.conv2(x)))
+        x = self.pool(F.relu(self.conv3(x)))
+        
+        x = x.view(-1, self._to_linear)
+        
+        x = F.relu(self.fc1(x))
+        x = self.fc2(x)
+
+        x = x.flatten()
+
+        if self.output_positive:
+            x = F.softplus(x)
+
+        return x
 
 
 def get_model(cfg, logger):
@@ -174,6 +231,12 @@ def get_model(cfg, logger):
         )
     elif cfg.model.tag == "MyResnet18":
         model = MyResnet18(
+            height=cfg.data.height,
+            width=cfg.data.width,
+            **model_params,
+        )
+    elif cfg.model.tag == "MyCNN":
+        model = MyCNN(
             height=cfg.data.height,
             width=cfg.data.width,
             **model_params,

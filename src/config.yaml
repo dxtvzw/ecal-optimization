@@ -1,19 +1,29 @@
 ---
   logging:
     log_freq: 20
-    log_plot_freq: 30
+    log_plot_freq: 50
     info_prints: true
     wandb: true
 
   paths:
-    data_dir: "data"
+    # data_dir: "data"
     # data_file: "0001_64k_real_spectra_15x15_spot.root"
     # data_file: "0001_500k_real_spectra_15x15_spot.root"
     # data_file: "0001_64k_wpc_15x15_spot.root"
     # data_file: "0001_64k_wpc_20x20_spot.root"
     # data_file: "0001_64k_wpc_25x25_spot_rs42.root"
     # data_file: "0001_64k_wpc_30x30_spot_rs42.root"
-    data_file: "0001_64k_wpc_40x40_spot_rs42.root"
+    # data_file: "0001_64k_wpc_40x40_spot_rs42.root"
+
+    data_dir: "data_numpy"
+    # data_file: "64k_real_15x15.npz"
+    # data_file: "500k_real_15x15.npz"
+    # data_file: "64k_wpc_15x15.npz"
+    # data_file: "64k_wpc_20x20.npz"
+    # data_file: "64k_wpc_25x25.npz"
+    # data_file: "64k_wpc_30x30.npz"
+    data_file: "64k_wpc_40x40.npz"
+
     checkpoint_dir: "checkpoints"
     checkpoint: "checkpoint.pth.tar"
     best_checkpoint: "best.pth.tar"
@@ -24,17 +34,19 @@
     test_size: 0.2
   
   model:
-    tag: "MyModel"
+    tag: "MyResnet18"
     use_checkpoint: "no" # one of "no", "last", "best"
     output_positive: true
     n_scales: 8
     hidden_dim: 32
+    dropout: 0.01
+    remove_batch_norm: false
   
   training:
     num_epochs: 100
     optimizer:
       learning_rate: 0.001
-      weight_decay: 0.01
+      weight_decay: 0.001
     scheduler:
       tag: "StepLR"
       step_size: 15

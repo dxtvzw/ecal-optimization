@@ -25,6 +25,33 @@ def extract_dimensions(filename):
         return None
 
 
+def read_file(cfg):
+    if cfg.paths.data_file.endswith("root"):
+        root_file = uproot.open(Path(cfg.paths.data_dir) / cfg.paths.data_file)
+        nevents=None
+
+        RawE = root_file['ecalNT']['RawEnergyDeposit'].arrays(library='np')['RawEnergyDeposit'][:nevents]
+        x = root_file['ecalNT']['RawX'].arrays(library='np')['RawX'][:nevents]
+        y = root_file['ecalNT']['RawY'].arrays(library='np')['RawY'][:nevents]
+        z = root_file['ecalNT']['RawZ'].arrays(library='np')['RawZ'][:nevents]
+
+        EnergyDeposit = np.array(root_file['ecalNT']['EnergyDeposit'].array()[:nevents])
+        EnergyDeposit = EnergyDeposit.reshape(-1, cfg.data.height, cfg.data.width)[:, None, :, :]
+
+        ParticlePDG = np.array(root_file['ecalNT']['ParticlePDG'].array())[:nevents]
+        ParticleMomentum_v = np.array(root_file['ecalNT']['ParticleMomentum'].array())[:nevents]
+        ParticleMomentum = np.sum(ParticleMomentum_v * ParticleMomentum_v, axis=1) ** 0.5
+
+        X = np.array(EnergyDeposit)
+        y = ParticleMomentum
+    else:
+        data = np.load(Path(cfg.paths.data_dir) / cfg.paths.data_file)
+        X = data['X']
+        y = data['y']
+
+    return X, y
+
+
 def get_data(cfg, logger):
     timer = Timer()
     logger.info("Loading the data")
@@ -34,23 +61,7 @@ def get_data(cfg, logger):
     cfg.data.height = height
     cfg.data.width = width
 
-    root_file = uproot.open(Path(cfg.paths.data_dir) / cfg.paths.data_file)
-    nevents=None
-
-    RawE = root_file['ecalNT']['RawEnergyDeposit'].arrays(library='np')['RawEnergyDeposit'][:nevents]
-    x = root_file['ecalNT']['RawX'].arrays(library='np')['RawX'][:nevents]
-    y = root_file['ecalNT']['RawY'].arrays(library='np')['RawY'][:nevents]
-    z = root_file['ecalNT']['RawZ'].arrays(library='np')['RawZ'][:nevents]
-
-    EnergyDeposit = np.array(root_file['ecalNT']['EnergyDeposit'].array()[:nevents])
-    EnergyDeposit = EnergyDeposit.reshape(-1, height, width)[:, None, :, :]
-
-    ParticlePDG = np.array(root_file['ecalNT']['ParticlePDG'].array())[:nevents]
-    ParticleMomentum_v = np.array(root_file['ecalNT']['ParticleMomentum'].array())[:nevents]
-    ParticleMomentum = np.sum(ParticleMomentum_v * ParticleMomentum_v, axis=1) ** 0.5
-
-    X = np.array(EnergyDeposit)
-    y = ParticleMomentum
+    X, y = read_file(cfg)
 
     X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=cfg.data.test_size, random_state=42)
 
