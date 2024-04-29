@@ -9,6 +9,7 @@ import random
 
 import torch
 from torch.utils.data import TensorDataset, DataLoader
+from torchvision.transforms import v2
 
 from sklearn.model_selection import train_test_split
 
@@ -52,6 +53,23 @@ def read_file(cfg):
     return X, y
 
 
+class MyDataset(Dataset):
+    def __init__(self, X, y, transform=None):
+        self.X = X
+        self.y = y
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.X)
+    
+    def __getitem__(self, index):
+        data = self.X[index]
+        trg = self.y[index]
+        if self.transform is not None:
+            data = self.transform(data)
+        return data, trg
+
+
 def get_data(cfg, logger):
     timer = Timer()
     logger.info("Loading the data")
@@ -65,8 +83,22 @@ def get_data(cfg, logger):
 
     X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=cfg.data.test_size, random_state=42)
 
-    train_dataset = TensorDataset(torch.tensor(X_train, dtype=torch.float32), torch.tensor(y_train, dtype=torch.float32))
-    val_dataset = TensorDataset(torch.tensor(X_val, dtype=torch.float32), torch.tensor(y_val, dtype=torch.float32))
+    train_transform = v2.Compose([
+        # v2.RandomResizedCrop(size=(height, width), antialias=None),
+        v2.RandomHorizontalFlip(p=0.5),
+        v2.RandomVerticalFlip(p=0.5),
+        # v2.RandomRotation(degrees=(0, 90)),
+    ]) if cfg.data.use_transforms else None
+
+    train_dataset = MyDataset(
+        torch.tensor(X_train, dtype=torch.float32),
+        torch.tensor(y_train, dtype=torch.float32),
+        transform=train_transform,
+    )
+    val_dataset = MyDataset(
+        torch.tensor(X_val, dtype=torch.float32),
+        torch.tensor(y_val, dtype=torch.float32),
+    )
 
     def seed_worker(worker_id):
         worker_seed = torch.initial_seed() % 2**32

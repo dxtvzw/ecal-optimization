@@ -202,6 +202,7 @@ class MyCNN(nn.Module):
 
 def get_model(cfg, logger):
     logger.info("Loading the model")
+    logger.info(f"Current PyTorch seed: {torch.seed()}")
     timer = Timer()
 
     cfg.paths.checkpoint_dir = os.path.join(

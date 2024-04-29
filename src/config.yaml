@@ -30,25 +30,26 @@
   
   data:
     batch_size: 512
-    num_workers: 4
+    num_workers: 16
     test_size: 0.2
+    use_transforms: true
   
   model:
-    tag: "MyResnet18"
+    tag: "MyCNN"
     use_checkpoint: "no" # one of "no", "last", "best"
-    output_positive: true
+    output_positive: false
     n_scales: 8
     hidden_dim: 32
     dropout: 0.01
     remove_batch_norm: false
   
   training:
-    num_epochs: 100
+    num_epochs: 300
     optimizer:
       learning_rate: 0.001
       weight_decay: 0.001
     scheduler:
       tag: "StepLR"
-      step_size: 15
+      step_size: 20
       gamma: 0.8
     loss_fn: "RMSE_E" # one of "RMSE_E", "MAE_E", "MSE", "MAE", "RMSLE"
