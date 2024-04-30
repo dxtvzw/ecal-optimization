@@ -18,11 +18,11 @@
     data_dir: "data_numpy"
     # data_file: "64k_real_15x15.npz"
     # data_file: "500k_real_15x15.npz"
-    # data_file: "64k_wpc_15x15.npz"
+    data_file: "64k_wpc_15x15.npz"
     # data_file: "64k_wpc_20x20.npz"
     # data_file: "64k_wpc_25x25.npz"
     # data_file: "64k_wpc_30x30.npz"
-    data_file: "64k_wpc_40x40.npz"
+    # data_file: "64k_wpc_40x40.npz"
 
     checkpoint_dir: "checkpoints"
     checkpoint: "checkpoint.pth.tar"
@@ -35,21 +35,31 @@
     use_transforms: true
   
   model:
-    tag: "MyCNN"
+    tag: "MyViT"
     use_checkpoint: "no" # one of "no", "last", "best"
-    output_positive: false
+    output_positive: true
     n_scales: 8
-    hidden_dim: 32
+    hidden_dim: 16
     dropout: 0.01
     remove_batch_norm: false
+
+    patch_size: 3
+    num_layers: 4
+    num_heads: 4
+    mlp_dim: 64
   
   training:
     num_epochs: 300
+
     optimizer:
-      learning_rate: 0.001
-      weight_decay: 0.001
+      tag: "AdamW"
+      learning_rate: 0.007
+      weight_decay: 0
+
     scheduler:
-      tag: "StepLR"
+      tag: "WarmupCosineSchedule"
       step_size: 20
       gamma: 0.8
+      warmup_steps: 20
+
     loss_fn: "RMSE_E" # one of "RMSE_E", "MAE_E", "MSE", "MAE", "RMSLE"

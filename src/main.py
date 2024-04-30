@@ -51,7 +51,7 @@ def train_fn(
         train_loss = torch.zeros((1,), device=device, dtype=torch.float32)
         num_batches = 0
 
-        logger.info(f"Epoch: {epoch}/{cfg.training.num_epochs}")
+        logger.info(f"Epoch: {epoch}/{cfg.training.num_epochs} || LR: {get_lr(optimizer):.6f}")
 
         model.train()
         for data, trg in train_loader:

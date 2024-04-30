@@ -79,6 +79,9 @@ def get_data(cfg, logger):
     cfg.data.height = height
     cfg.data.width = width
 
+    cfg.model.height = height
+    cfg.model.width = width
+
     X, y = read_file(cfg)
 
     X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=cfg.data.test_size, random_state=42)

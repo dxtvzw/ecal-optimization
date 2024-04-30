@@ -2,7 +2,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from torchvision.models import resnet18
+from torchvision.models import resnet18, VisionTransformer
+
+import math
 
 from utils import Timer
 from utils import namespace_to_dict
@@ -200,6 +202,65 @@ class MyCNN(nn.Module):
         return x
 
 
+class MyViT(nn.Module):
+    def __init__(
+            self,
+            height=15,
+            width=15,
+            patch_size=4,
+            hidden_dim=64,
+            output_positive=True,
+            num_layers=4,
+            num_heads=8,
+            mlp_dim=256,
+            **kwargs
+        ):
+        super(MyViT, self).__init__()
+        self.height = height
+        self.width = width
+        self.output_positive = output_positive
+        self.model = VisionTransformer(
+            image_size=height,
+            patch_size=patch_size,
+            num_layers=num_layers,
+            num_heads=num_heads,
+            hidden_dim=hidden_dim,
+            mlp_dim=mlp_dim,
+            num_classes=1,
+        )
+        
+    def forward(self, x):
+        batch_size = x.size(0)
+        x = x.view(batch_size, 1, self.height, self.width)
+        x = x.repeat(1, 3, 1, 1)
+        x = self.model(x)
+        x = x.flatten()
+        if self.output_positive:
+            x = F.softplus(x)
+        return x
+
+
+# Credits to: https://github.com/TalSchuster/pytorch-transformers/tree/master
+class WarmupCosineSchedule(torch.optim.lr_scheduler.LambdaLR):
+    """ Linear warmup and then cosine decay.
+        Linearly increases learning rate from 0 to 1 over `warmup_steps` training steps.
+        Decreases learning rate from 1. to 0. over remaining `t_total - warmup_steps` steps following a cosine curve.
+        If `cycles` (default=0.5) is different from default, learning rate follows cosine function after warmup.
+    """
+    def __init__(self, optimizer, warmup_steps, t_total, cycles=.5, last_epoch=-1):
+        self.warmup_steps = warmup_steps
+        self.t_total = t_total
+        self.cycles = cycles
+        super(WarmupCosineSchedule, self).__init__(optimizer, self.lr_lambda, last_epoch=last_epoch)
+
+    def lr_lambda(self, step):
+        if step < self.warmup_steps:
+            return float(step) / float(max(1.0, self.warmup_steps))
+        # progress after warmup
+        progress = float(step - self.warmup_steps) / float(max(1, self.t_total - self.warmup_steps))
+        return max(0.0, 0.5 * (1. + math.cos(math.pi * float(self.cycles) * 2.0 * progress)))
+
+
 def get_model(cfg, logger):
     logger.info("Loading the model")
     logger.info(f"Current PyTorch seed: {torch.seed()}")
@@ -212,52 +273,54 @@ def get_model(cfg, logger):
 
     model_params = namespace_to_dict(cfg.model)
 
-    if cfg.model.tag == "SimpleModel":
-        model = SimpleModel(
-            height=cfg.data.height,
-            width=cfg.data.width,
-            **model_params,
-        )
-    elif cfg.model.tag == "LinearModel":
-        model = LinearModel(
-            height=cfg.data.height,
-            width=cfg.data.width,
-            **model_params,
-        )
-    elif cfg.model.tag == "MyModel":
-        model = MyModel(
-            height=cfg.data.height,
-            width=cfg.data.width,
-            **model_params,
-        )
-    elif cfg.model.tag == "MyResnet18":
-        model = MyResnet18(
-            height=cfg.data.height,
-            width=cfg.data.width,
-            **model_params,
-        )
-    elif cfg.model.tag == "MyCNN":
-        model = MyCNN(
-            height=cfg.data.height,
-            width=cfg.data.width,
-            **model_params,
-        )
-    else:
+    model_types = [
+        SimpleModel,
+        LinearModel,
+        MyModel,
+        MyResnet18,
+        MyCNN,
+        MyViT,
+    ]
+
+    model = None
+    for model_type in model_types:
+        if model_type.__name__ == cfg.model.tag:
+            model = model_type(**model_params)
+    
+    if model is None:
         raise RuntimeError(f"Invalid model tag: {cfg.model.tag}")
     
     model = model.to(cfg.device)
 
-    optimizer = torch.optim.AdamW(
-        model.parameters(),
-        lr=cfg.training.optimizer.learning_rate,
-        weight_decay=cfg.training.optimizer.weight_decay,
-    )
+    if cfg.training.optimizer.tag == "AdamW":
+        optimizer = torch.optim.AdamW(
+            model.parameters(),
+            lr=cfg.training.optimizer.learning_rate,
+            weight_decay=cfg.training.optimizer.weight_decay,
+        )
+    elif cfg.training.optimizer.tag == "Adam":
+        optimizer = torch.optim.Adam(
+            model.parameters(),
+            lr=cfg.training.optimizer.learning_rate,
+            weight_decay=cfg.training.optimizer.weight_decay,
+        )
+    else:
+        raise RuntimeError(f"Invalid optimizer tag: {cfg.optimizer.tag}")
 
-    scheduler = torch.optim.lr_scheduler.StepLR(
-        optimizer,
-        cfg.training.scheduler.step_size,
-        cfg.training.scheduler.gamma,
-    )
+    if cfg.training.scheduler.tag == "StepLR":
+        scheduler = torch.optim.lr_scheduler.StepLR(
+            optimizer,
+            cfg.training.scheduler.step_size,
+            cfg.training.scheduler.gamma,
+        )
+    elif cfg.training.scheduler.tag == "WarmupCosineSchedule":
+        scheduler = WarmupCosineSchedule(
+            optimizer,
+            warmup_steps=cfg.training.scheduler.warmup_steps,
+            t_total=cfg.training.num_epochs,
+        )
+    else:
+        raise RuntimeError(f"Invalid scheduler tag: {cfg.scheduler.tag}")
 
     checkpoint_path = None
 
