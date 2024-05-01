@@ -213,6 +213,8 @@ class MyViT(nn.Module):
             num_layers=4,
             num_heads=8,
             mlp_dim=256,
+            dropout=0.01,
+            attention_dropout=0.01,
             **kwargs
         ):
         super(MyViT, self).__init__()
@@ -227,6 +229,8 @@ class MyViT(nn.Module):
             hidden_dim=hidden_dim,
             mlp_dim=mlp_dim,
             num_classes=1,
+            dropout=dropout,
+            attention_dropout=attention_dropout,
         )
         
     def forward(self, x):

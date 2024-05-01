@@ -10,6 +10,7 @@
     # data_file: "0001_64k_real_spectra_15x15_spot.root"
     # data_file: "0001_500k_real_spectra_15x15_spot.root"
     # data_file: "0001_64k_wpc_10x10_spot.root"
+    # data_file: "0001_64k_wpc_10x10_spot_v2.root"
     # data_file: "0001_64k_wpc_15x15_spot.root"
     # data_file: "0001_64k_wpc_20x20_spot.root"
     # data_file: "0001_64k_wpc_25x25_spot_rs42.root"
@@ -20,11 +21,12 @@
     # data_file: "64k_real_15x15.npz"
     # data_file: "500k_real_15x15.npz"
     # data_file: "64k_wpc_10x10.npz"
+    data_file: "64k_wpc_10x10_v2.npz"
     # data_file: "64k_wpc_15x15.npz"
     # data_file: "64k_wpc_20x20.npz"
     # data_file: "64k_wpc_25x25.npz"
     # data_file: "64k_wpc_30x30.npz"
-    data_file: "64k_wpc_40x40.npz"
+    # data_file: "64k_wpc_40x40.npz"
 
     checkpoint_dir: "checkpoints"
     checkpoint: "checkpoint.pth.tar"
@@ -42,16 +44,17 @@
     output_positive: true
     n_scales: 8
     hidden_dim: 16
-    dropout: 0.01
+    dropout: 0.0
     remove_batch_norm: false
 
     patch_size: 5
     num_layers: 4
     num_heads: 4
     mlp_dim: 64
+    attention_dropout: 0.0
   
   training:
-    num_epochs: 300
+    num_epochs: 600
 
     optimizer:
       tag: "AdamW"
@@ -62,6 +65,6 @@
       tag: "WarmupCosineSchedule"
       step_size: 20
       gamma: 0.8
-      warmup_steps: 20
+      warmup_steps: 50
 
     loss_fn: "RMSE_E" # one of "RMSE_E", "MAE_E", "MSE", "MAE", "RMSLE"
