@@ -9,6 +9,7 @@
     # data_dir: "data"
     # data_file: "0001_64k_real_spectra_15x15_spot.root"
     # data_file: "0001_500k_real_spectra_15x15_spot.root"
+    # data_file: "0001_64k_wpc_10x10_spot.root"
     # data_file: "0001_64k_wpc_15x15_spot.root"
     # data_file: "0001_64k_wpc_20x20_spot.root"
     # data_file: "0001_64k_wpc_25x25_spot_rs42.root"
@@ -18,11 +19,12 @@
     data_dir: "data_numpy"
     # data_file: "64k_real_15x15.npz"
     # data_file: "500k_real_15x15.npz"
-    data_file: "64k_wpc_15x15.npz"
+    # data_file: "64k_wpc_10x10.npz"
+    # data_file: "64k_wpc_15x15.npz"
     # data_file: "64k_wpc_20x20.npz"
     # data_file: "64k_wpc_25x25.npz"
     # data_file: "64k_wpc_30x30.npz"
-    # data_file: "64k_wpc_40x40.npz"
+    data_file: "64k_wpc_40x40.npz"
 
     checkpoint_dir: "checkpoints"
     checkpoint: "checkpoint.pth.tar"
@@ -43,7 +45,7 @@
     dropout: 0.01
     remove_batch_norm: false
 
-    patch_size: 3
+    patch_size: 5
     num_layers: 4
     num_heads: 4
     mlp_dim: 64

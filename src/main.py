@@ -48,7 +48,7 @@ def train_fn(
     for epoch in range(1, cfg.training.num_epochs + 1):
 
         timer = Timer()
-        train_loss = torch.zeros((1,), device=device, dtype=torch.float32)
+        train_loss = torch.zeros((1,), device=cfg.device, dtype=torch.float32)
         num_batches = 0
 
         logger.info(f"Epoch: {epoch}/{cfg.training.num_epochs} || LR: {get_lr(optimizer):.6f}")
@@ -58,8 +58,8 @@ def train_fn(
             num_batches += 1
             optimizer.zero_grad()
 
-            data = data.to(device)
-            trg = trg.to(device)
+            data = data.to(cfg.device)
+            trg = trg.to(cfg.device)
 
             output = model(data)
             loss = criterion(output, trg)
@@ -75,12 +75,12 @@ def train_fn(
         
         train_loss = (train_loss / num_batches).item()
         
-        val_loss = torch.zeros((1,), device=device, dtype=torch.float32)
+        val_loss = torch.zeros((1,), device=cfg.device, dtype=torch.float32)
         model.eval()
         with torch.no_grad():
             for data, trg in val_loader:
-                data = data.to(device)
-                trg = trg.to(device)
+                data = data.to(cfg.device)
+                trg = trg.to(cfg.device)
 
                 output = model(data)
                 val_loss += criterion(output, trg).detach()
@@ -143,9 +143,7 @@ if __name__ == "__main__":
             config=cfg_dict
         )
     
-    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-
-    cfg.device = device
+    cfg.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
     train_loader, val_loader = get_data(cfg, logger)
 

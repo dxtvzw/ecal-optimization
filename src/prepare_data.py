@@ -25,6 +25,7 @@ if __name__ == '__main__':
     files = {
         "64k_real_15x15": "0001_64k_real_spectra_15x15_spot.root",
         "500k_real_15x15": "0001_500k_real_spectra_15x15_spot.root",
+        "64k_wpc_10x10": "0001_64k_wpc_10x10_spot.root",
         "64k_wpc_15x15": "0001_64k_wpc_15x15_spot.root",
         "64k_wpc_20x20": "0001_64k_wpc_20x20_spot.root",
         "64k_wpc_25x25": "0001_64k_wpc_25x25_spot_rs42.root",
