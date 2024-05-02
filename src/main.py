@@ -43,6 +43,9 @@ def train_fn(
 
     all_val_losses = []
 
+    if cfg.training.use_amp:
+        scaler = torch.cuda.amp.GradScaler()
+
     logger.info("=" * 80)
 
     for epoch in range(1, cfg.training.num_epochs + 1):
@@ -61,14 +64,25 @@ def train_fn(
             data = data.to(cfg.device)
             trg = trg.to(cfg.device)
 
-            output = model(data)
-            loss = criterion(output, trg)
+            if cfg.training.use_amp:
+                with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
+                    output = model(data)
+                    loss = criterion(output, trg)
+                
+                train_loss += loss.detach()
 
-            train_loss += loss.detach()
+                scaler.scale(loss).backward()
+                scaler.step(optimizer)
+                scaler.update()
+            else:
+                output = model(data)
+                loss = criterion(output, trg)
 
-            loss.backward()
+                train_loss += loss.detach()
 
-            optimizer.step()
+                loss.backward()
+
+                optimizer.step()
 
             if (num_batches % cfg.logging.log_freq == 0) or (num_batches == len(train_loader)):
                 logger.info(f"Batch: {num_batches}/{len(train_loader)} || Train loss: {train_loss.item() / num_batches:0.4f} || {timer()}")
@@ -82,8 +96,13 @@ def train_fn(
                 data = data.to(cfg.device)
                 trg = trg.to(cfg.device)
 
-                output = model(data)
-                val_loss += criterion(output, trg).detach()
+                if cfg.training.use_amp:
+                    with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
+                        output = model(data)
+                        val_loss += criterion(output, trg).detach()
+                else:
+                    output = model(data)
+                    val_loss += criterion(output, trg).detach()
         
         val_loss /= len(val_loader)
 

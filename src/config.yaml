@@ -47,14 +47,19 @@
     dropout: 0.0
     remove_batch_norm: false
 
-    patch_size: 5
-    num_layers: 8
+    patch_size: 2
+    num_layers: 4
     num_heads: 4
     mlp_dim: 64
     attention_dropout: 0.0
+
+    ensemble:
+      num_models: 10
+      use_best: false
   
   training:
-    num_epochs: 300
+    num_epochs: 100
+    use_amp: false
 
     optimizer:
       tag: "AdamW"
@@ -65,6 +70,6 @@
       tag: "WarmupCosineSchedule"
       step_size: 20
       gamma: 0.8
-      warmup_steps: 20
+      warmup_steps: 7
 
     loss_fn: "RMSE_E" # one of "RMSE_E", "MAE_E", "MSE", "MAE", "RMSLE"

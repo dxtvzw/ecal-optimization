@@ -265,7 +265,7 @@ class WarmupCosineSchedule(torch.optim.lr_scheduler.LambdaLR):
         return max(0.0, 0.5 * (1. + math.cos(math.pi * float(self.cycles) * 2.0 * progress)))
 
 
-def get_model(cfg, logger):
+def get_model(cfg, logger, create_subdirs=True):
     logger.info("Loading the model")
     logger.info(f"Current PyTorch seed: {torch.seed()}")
     timer = Timer()
@@ -273,6 +273,14 @@ def get_model(cfg, logger):
     cfg.paths.checkpoint_dir = os.path.join(
         cfg.paths.checkpoint_dir,
         f"{cfg.model.tag}_{cfg.data.height}x{cfg.data.width}",
+    )
+    if create_subdirs:
+        os.makedirs(cfg.paths.checkpoint_dir, exist_ok=True)
+        
+    cur_run_id = len(list(os.walk(cfg.paths.checkpoint_dir)))
+    cfg.paths.checkpoint_dir = os.path.join(
+        cfg.paths.checkpoint_dir,
+        f"run_{cur_run_id}",
     )
 
     model_params = namespace_to_dict(cfg.model)
