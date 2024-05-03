@@ -12,12 +12,52 @@ from utils import namespace_to_dict
 import os
 
 
+class CustomSoftplusFunction(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, x, positive_eng, positive_pos):
+        ctx.save_for_backward(x)
+        ctx.positive_eng = positive_eng
+        ctx.positive_pos = positive_pos
+        
+        if positive_eng:
+            x[:, 0] = torch.nn.functional.softplus(x[:, 0])
+        if positive_pos:
+            x[:, 1:] = torch.nn.functional.softplus(x[:, 1:])
+        
+        return x
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        x, = ctx.saved_tensors
+        grad_input = grad_output.clone()
+        
+        if ctx.positive_eng:
+            grad_input[:, 0] *= torch.nn.functional.sigmoid(x[:, 0])
+        if ctx.positive_pos:
+            grad_input[:, 1:] *= torch.nn.functional.sigmoid(x[:, 1:])
+        
+        return grad_input, None, None
+
+
+def custom_softplus(x, positive_eng=False, positive_pos=False):
+    return CustomSoftplusFunction.apply(x, positive_eng, positive_pos)
+
+
 class SimpleModel(nn.Module):
-    def __init__(self, height=15, width=15, **kwargs) -> None:
+    def __init__(
+            self,
+            height=15,
+            width=15,
+            positive_eng=True,
+            positive_pos=True,
+            **kwargs
+        ) -> None:
         super(SimpleModel, self).__init__()
 
         self.height = height
         self.width = width
+        self.positive_eng = positive_eng
+        self.positive_pos = positive_pos
 
         self.conv = nn.Sequential(
             nn.Conv2d(in_channels=1, out_channels=4, kernel_size=3, padding=1),
@@ -30,7 +70,7 @@ class SimpleModel(nn.Module):
             nn.GELU(),
         )
 
-        self.fc1 = nn.Linear(3600, 1)
+        self.fc1 = nn.Linear(1600, 3)
     
     def forward(self, x):
         batch_size = x.size(0)
@@ -38,101 +78,57 @@ class SimpleModel(nn.Module):
         x = self.conv(x)
         x = x.view(x.size(0), -1)
         x = self.fc1(x)
-        x = x.flatten()
+        x = custom_softplus(x, self.positive_eng, self.positive_pos)
         return x
 
 
 class LinearModel(nn.Module):
-    def __init__(self, height=15, width=15, output_positive=False, eps=1e-9, **kwargs) -> None:
+    def __init__(
+            self,
+            height=15,
+            width=15,
+            positive_eng=True,
+            positive_pos=True,
+            eps=1e-9,
+            **kwargs
+        ) -> None:
         super(LinearModel, self).__init__()
 
         self.height = height
         self.width = width
 
-        self.fc1 = nn.Linear(self.height * self.width, 1)
-        self.output_positive = output_positive
+        self.fc1 = nn.Linear(self.height * self.width, 3)
+        self.positive_eng = positive_eng
+        self.positive_pos = positive_pos
         self.eps = eps
     
     def forward(self, x):
         batch_size = x.size(0)
         x = x.view(batch_size, self.height * self.width)
         x = self.fc1(x)
-        x = x.flatten()
-        if self.output_positive:
-            x = F.softplus(x)
+        x = custom_softplus(x, self.positive_eng, self.positive_pos)
         return x
 
 
-class MyModel(nn.Module):
+class MyResnet18(nn.Module):
     def __init__(
             self,
             height=15,
             width=15,
-            n_scales=7,
-            hidden_dim=4,
-            output_positive=True,
-            dropout=0.1,
-            **kwargs,
-    ) -> None:
-        super(MyModel, self).__init__()
-
-        self.height = height
-        self.width = width
-
-        self.output_positive = output_positive
-
-        self.n_scales = n_scales
-        self.hidden_dim = hidden_dim
-        self.dropout_prob = dropout
-        self.scales = [0.5 ** i for i in range(self.n_scales)]
-
-        self.models = []
-        for scale in self.scales:
-            self.models.append(self._get_model())
-
-        self.models = nn.ModuleList(self.models)
-    
-    def _get_model(self):
-        layer = nn.Sequential(
-            nn.Linear(self.height * self.width, self.hidden_dim),
-            nn.GELU(),
-            nn.Linear(self.hidden_dim, self.hidden_dim),
-            nn.Dropout(self.dropout_prob),
-        )
-        return layer
-
-        # return nn.Linear(self.height * self.width, self.hidden_dim)
-
-    def forward(self, x):
-        batch_size = x.size(0)
-        x = x.view(batch_size, self.height * self.width)
-        
-        result = None
-        for scale, model in zip(self.scales, self.models):
-            current = model(x * scale) / scale
-            if result is None:
-                result = current
-            else:
-                result = torch.cat((result, current), dim=1)
-
-        result = result.mean(dim=1)
-        result = result.flatten()
-
-        if self.output_positive:
-            result = F.softplus(result)
-        return result
-
-
-class MyResnet18(nn.Module):
-    def __init__(self, height=15, width=15, remove_batch_norm=True, output_positive=True, **kwargs) -> None:
+            remove_batch_norm=True,
+            positive_eng=True,
+            positive_pos=True,
+            **kwargs
+        ) -> None:
         super(MyResnet18, self).__init__()
 
         self.height = height
         self.width = width
 
-        self.output_positive = output_positive
+        self.positive_eng = positive_eng
+        self.positive_pos = positive_pos
 
-        self.model = resnet18(num_classes=1)
+        self.model = resnet18(num_classes=3)
         self.model.conv1 = nn.Conv2d(1, 64, 1, bias=False)
 
         if remove_batch_norm:
@@ -149,21 +145,27 @@ class MyResnet18(nn.Module):
     def forward(self, x):
         batch_size = x.size(0)
         x = x.view(batch_size, 1, self.height, self.width)
-        
-        result = self.model(x)
-        result = result.flatten()
+        x = self.model(x)
 
-        if self.output_positive:
-            result = F.softplus(result)
-        return result
+        x = custom_softplus(x, self.positive_eng, self.positive_pos)
+        return x
 
 
 class MyCNN(nn.Module):
-    def __init__(self, height=15, width=15, hidden_dim=100, output_positive=True, **kwargs):
+    def __init__(
+            self,
+            height=15,
+            width=15,
+            hidden_dim=100,
+            positive_eng=True,
+            positive_pos=True,
+            **kwargs
+        ):
         super(MyCNN, self).__init__()
         self.height = height
         self.width = width
-        self.output_positive = output_positive
+        self.positive_eng = positive_eng
+        self.positive_pos = positive_pos
         
         self.conv1 = nn.Conv2d(1, 16, kernel_size=3, padding=1)
         self.conv2 = nn.Conv2d(16, 32, kernel_size=3, padding=1)
@@ -175,7 +177,7 @@ class MyCNN(nn.Module):
         self._mock_forward_pass(height, width)
         
         self.fc1 = nn.Linear(self._to_linear, hidden_dim)
-        self.fc2 = nn.Linear(hidden_dim, 1)
+        self.fc2 = nn.Linear(hidden_dim, 3)
 
     def _mock_forward_pass(self, width, height):
         dummy_x = torch.zeros((1, 1, width, height))
@@ -194,10 +196,7 @@ class MyCNN(nn.Module):
         x = F.relu(self.fc1(x))
         x = self.fc2(x)
 
-        x = x.flatten()
-
-        if self.output_positive:
-            x = F.softplus(x)
+        x = custom_softplus(x, self.positive_eng, self.positive_pos)
 
         return x
 
@@ -209,7 +208,8 @@ class MyViT(nn.Module):
             width=15,
             patch_size=4,
             hidden_dim=64,
-            output_positive=True,
+            positive_eng=True,
+            positive_pos=True,
             num_layers=4,
             num_heads=8,
             mlp_dim=256,
@@ -220,7 +220,9 @@ class MyViT(nn.Module):
         super(MyViT, self).__init__()
         self.height = height
         self.width = width
-        self.output_positive = output_positive
+        self.positive_eng = positive_eng
+        self.positive_pos = positive_pos
+
         self.model = VisionTransformer(
             image_size=height,
             patch_size=patch_size,
@@ -228,7 +230,7 @@ class MyViT(nn.Module):
             num_heads=num_heads,
             hidden_dim=hidden_dim,
             mlp_dim=mlp_dim,
-            num_classes=1,
+            num_classes=3,
             dropout=dropout,
             attention_dropout=attention_dropout,
         )
@@ -238,9 +240,7 @@ class MyViT(nn.Module):
         x = x.view(batch_size, 1, self.height, self.width)
         x = x.repeat(1, 3, 1, 1)
         x = self.model(x)
-        x = x.flatten()
-        if self.output_positive:
-            x = F.softplus(x)
+        x = custom_softplus(x, self.positive_eng, self.positive_pos)
         return x
 
 
@@ -288,7 +288,6 @@ def get_model(cfg, logger, create_subdirs=True):
     model_types = [
         SimpleModel,
         LinearModel,
-        MyModel,
         MyResnet18,
         MyCNN,
         MyViT,

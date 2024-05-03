@@ -43,8 +43,10 @@ def read_file(cfg):
         ParticleMomentum_v = np.array(root_file['ecalNT']['ParticleMomentum'].array())[:nevents]
         ParticleMomentum = np.sum(ParticleMomentum_v * ParticleMomentum_v, axis=1) ** 0.5
 
+        ParticlePoint = np.array(root_file['ecalNT']['ParticlePoint'].array())[:nevents]
+
         X = np.array(EnergyDeposit)
-        y = ParticleMomentum
+        y = np.concatenate((ParticleMomentum[:, None], ParticlePoint[:, :2]), axis=1)
     else:
         data = np.load(Path(cfg.paths.data_dir) / cfg.paths.data_file)
         X = data['X']
@@ -70,6 +72,24 @@ class MyDataset(Dataset):
         return data, trg
 
 
+class Normalizer:
+    def __init__(self):
+        self.min_val = np.inf
+        self.max_val = -np.inf
+    
+    def fit(self, arr: np.array):
+        self.min_val = arr.min()
+        self.max_val = arr.max()
+    
+    def transform(self, arr: np.array):
+        res = (arr - self.min_val) / (self.max_val - self.min_val)
+        return res
+
+    def fit_transform(self, arr: np.array):
+        self.fit(arr)
+        return self.transform(arr)
+
+
 def get_data(cfg, logger):
     timer = Timer()
     logger.info("Loading the data")
@@ -85,6 +105,18 @@ def get_data(cfg, logger):
     X, y = read_file(cfg)
 
     X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=cfg.data.test_size, random_state=42)
+
+    if cfg.data.normalize_position:
+        x_normalizer = Normalizer()
+        y_normalizer = Normalizer()
+
+        x_normalizer.fit(y_train[:, 1])
+        y_train[:, 1] = x_normalizer.transform(y_train[:, 1])
+        y_val[:, 1] = x_normalizer.transform(y_val[:, 1])
+
+        y_normalizer.fit(y_train[:, 2])
+        y_train[:, 2] = y_normalizer.transform(y_train[:, 2])
+        y_val[:, 2] = y_normalizer.transform(y_val[:, 2])
 
     train_transform = v2.Compose([
         # v2.RandomResizedCrop(size=(height, width), antialias=None),

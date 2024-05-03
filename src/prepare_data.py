@@ -54,7 +54,9 @@ if __name__ == '__main__':
         ParticleMomentum_v = np.array(root_file['ecalNT']['ParticleMomentum'].array())[:nevents]
         ParticleMomentum = np.sum(ParticleMomentum_v * ParticleMomentum_v, axis=1) ** 0.5
 
+        ParticlePoint = np.array(root_file['ecalNT']['ParticlePoint'].array())[:nevents]
+
         X = np.array(EnergyDeposit)
-        y = ParticleMomentum
+        y = np.concatenate((ParticleMomentum[:, None], ParticlePoint[:, :2]), axis=1)
 
         np.savez(Path(NUMPY_DATA_DIR) / key, X=X, y=y)

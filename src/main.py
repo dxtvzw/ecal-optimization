@@ -17,7 +17,8 @@ def train_fn(
         model,
         optimizer,
         scheduler,
-        criterion,
+        criterion_eng,
+        criterion_pos,
         cfg,
         logger,
     ):
@@ -37,7 +38,7 @@ def train_fn(
     def log_plots(epoch, val_outputs, val_targets, no_reduce_metrics):
         logger.info("Logging plots to wandb")
         for name, value in no_reduce_metrics.items():
-            data = [[x, y] for (x, y) in zip(val_targets, value)]
+            data = [[x, y] for (x, y) in zip(val_targets[:, 0], value)]
             table = wandb.Table(data=data, columns=["Energy", f"{name} Loss"])
             wandb.log({f"scatter_{name}": wandb.plot.scatter(table, "Energy",  f"{name} Loss")}, step=epoch)
 
@@ -51,7 +52,9 @@ def train_fn(
     for epoch in range(1, cfg.training.num_epochs + 1):
 
         timer = Timer()
-        train_loss = torch.zeros((1,), device=cfg.device, dtype=torch.float32)
+        train_total = torch.zeros((1,), device=cfg.device, dtype=torch.float32)
+        train_eng = torch.zeros_like(train_total)
+        train_pos = torch.zeros_like(train_total)
         num_batches = 0
 
         logger.info(f"Epoch: {epoch}/{cfg.training.num_epochs} || LR: {get_lr(optimizer):.6f}")
@@ -67,29 +70,46 @@ def train_fn(
             if cfg.training.use_amp:
                 with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
                     output = model(data)
-                    loss = criterion(output, trg)
+                    loss_eng = criterion_eng(output[:, 0], trg[:, 0])
+                    loss_pos = criterion_pos(output[:, 1:3], trg[:, 1:3])
+                    loss = 0.5 * loss_eng + 0.5 * loss_pos
                 
-                train_loss += loss.detach()
+                train_total += loss.detach()
+                train_eng += loss_eng.detach()
+                train_pos += loss_pos.detach()
 
                 scaler.scale(loss).backward()
                 scaler.step(optimizer)
                 scaler.update()
             else:
                 output = model(data)
-                loss = criterion(output, trg)
+                loss_eng = criterion_eng(output[:, 0], trg[:, 0])
+                loss_pos = criterion_pos(output[:, 1:3], trg[:, 1:3])
+                loss = 0.5 * loss_eng + 0.5 * loss_pos
 
-                train_loss += loss.detach()
+                train_total += loss.detach()
+                train_eng += loss_eng.detach()
+                train_pos += loss_pos.detach()
 
                 loss.backward()
 
                 optimizer.step()
 
             if (num_batches % cfg.logging.log_freq == 0) or (num_batches == len(train_loader)):
-                logger.info(f"Batch: {num_batches}/{len(train_loader)} || Train loss: {train_loss.item() / num_batches:0.4f} || {timer()}")
+                # logger.info(f"Batch: {num_batches}/{len(train_loader)} || Train total: {train_total.item() / num_batches:0.4f} || {timer()}")
+                logger.info(f"Batch: {num_batches}/{len(train_loader)} || "
+                             f"Train total: {train_total.item() / num_batches:0.4f} || "
+                             f"Train eng: {train_eng.item() / num_batches:0.4f} || "
+                             f"Train pos: {train_pos.item() / num_batches:0.4f} || "
+                             f"{timer()}")
+                
+        train_total = (train_total / num_batches).item()
+        train_eng = (train_eng / num_batches).item()
+        train_pos = (train_pos / num_batches).item()
         
-        train_loss = (train_loss / num_batches).item()
-        
-        val_loss = torch.zeros((1,), device=cfg.device, dtype=torch.float32)
+        val_total = torch.zeros((1,), device=cfg.device, dtype=torch.float32)
+        val_eng = torch.zeros_like(val_total)
+        val_pos = torch.zeros_like(val_total)
         model.eval()
         with torch.no_grad():
             for data, trg in val_loader:
@@ -99,18 +119,30 @@ def train_fn(
                 if cfg.training.use_amp:
                     with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
                         output = model(data)
-                        val_loss += criterion(output, trg).detach()
+                        loss_eng = criterion_eng(output[:, 0], trg[:, 0])
+                        loss_pos = criterion_pos(output[:, 1:3], trg[:, 1:3])
+                        loss = 0.5 * loss_eng + 0.5 * loss_pos
+
+                        val_total += loss.detach()
+                        val_eng += loss_eng.detach()
+                        val_pos += loss_pos.detach()
                 else:
                     output = model(data)
-                    val_loss += criterion(output, trg).detach()
+                    loss_eng = criterion_eng(output[:, 0], trg[:, 0])
+                    loss_pos = criterion_pos(output[:, 1:3], trg[:, 1:3])
+                    loss = 0.5 * loss_eng + 0.5 * loss_pos
+
+                    val_total += loss.detach()
+                    val_eng += loss_eng.detach()
+                    val_pos += loss_pos.detach()
         
-        val_loss /= len(val_loader)
+        val_total = (val_total / len(val_loader)).item()
+        val_eng = (val_eng / len(val_loader)).item()
+        val_pos = (val_pos / len(val_loader)).item()
 
-        val_loss = val_loss.item()
+        is_best = (len(all_val_losses) == 0) or (val_total < min(all_val_losses))
 
-        is_best = (len(all_val_losses) == 0) or (val_loss < min(all_val_losses))
-
-        all_val_losses.append(val_loss)
+        all_val_losses.append(val_total)
 
         val_outputs, val_targets, metrics, no_reduce_metrics = compute_metrics(
             model=model,
@@ -118,12 +150,22 @@ def train_fn(
             cfg=cfg,
         )
 
-        logger.info(f"Val loss: {val_loss:0.4f} || {pretty_metrics(metrics)}")
+        # logger.info(f"Val loss: {val_loss:0.4f} || {pretty_metrics(metrics)}")
 
+        logger.info(f"Val total: {val_total:0.4f} || "
+                f"Val eng: {val_eng:0.4f} || "
+                f"Val pos: {val_pos:0.4f}")
+        
+        logger.info(f"Metrics: {pretty_metrics(metrics)}")
+        
         if wandb.run is not None:
             wandb.log({
-                "train_loss": train_loss,
-                "val_loss": val_loss,
+                "train_total": train_total,
+                "train_eng": train_eng,
+                "train_pos": train_pos,
+                "val_total": val_total,
+                "val_eng": val_eng,
+                "val_pos": val_pos,
                 "lr": get_lr(optimizer),
                 **metrics,
             }, step=epoch)
@@ -140,7 +182,7 @@ def train_fn(
                 "model": model.state_dict(),
                 "optimizer": optimizer.state_dict(),
                 "scheduler": scheduler.state_dict() if scheduler is not None else None,
-                "val_loss": val_loss,
+                "val_total": val_total,
             },
             is_best=is_best,
             cfg=cfg,
@@ -171,7 +213,8 @@ if __name__ == "__main__":
     if wandb.run is not None:
         wandb.watch(model, log="all")
 
-    criterion = get_loss_fn(cfg.training.loss_fn)
+    criterion_eng = get_loss_fn(cfg.training.loss_fn_eng)
+    criterion_pos = get_loss_fn(cfg.training.loss_fn_pos)
 
     train_fn(
         train_loader=train_loader,
@@ -179,7 +222,8 @@ if __name__ == "__main__":
         model=model,
         optimizer=optimizer,
         scheduler=scheduler,
-        criterion=criterion,
+        criterion_eng=criterion_eng,
+        criterion_pos=criterion_pos,
         cfg=cfg,
         logger=logger,
     )

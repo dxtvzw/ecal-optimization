@@ -141,18 +141,43 @@ class Loss6(nn.Module):
             return loss.mean()
 
 
+class Loss7(nn.Module):
+    name = "None" # Placeholder loss that returns zero
+
+    def __init__(self, reduction='mean'):
+        super(Loss7, self).__init__()
+        self.reduction = reduction
+    
+    def forward(self, pred, trg):
+        loss = torch.zeros_like(pred)
+        if self.reduction == 'none':
+            return loss
+        elif self.reduction == 'sum':
+            return loss.sum()
+        else:
+            return loss.mean()
+        
+
+class Loss8(nn.Module):
+    name = "RMSE"
+
+    def __init__(self, reduction='mean'):
+        super(Loss8, self).__init__()
+        self.reduction = reduction
+    
+    def forward(self, pred, trg):
+        return torch.sqrt(F.mse_loss(pred, trg, reduction=self.reduction))
+
+
 def get_loss_fn(loss_name, reduction="mean"):
-    all_losses = [Loss1, Loss2, Loss3, Loss4, Loss5, Loss6]
+    all_losses = [Loss1, Loss2, Loss3, Loss4, Loss5, Loss6, Loss7, Loss8]
     for LossClass in all_losses:
         if LossClass.name == loss_name:
             return LossClass(reduction=reduction)
     raise RuntimeError(f"Invalid loss function: {loss_name}")
 
 
-from tqdm.auto import tqdm
-
-
-def compute_metrics(model, val_loader, cfg, loss_fns=["RMSE_E", "MAE_E", "RMSLE", "RR"]):
+def compute_metrics(model, val_loader, cfg, loss_fns=["RMSE_E", "MAE_E", "RR", "RMSE", "MSE", "MAE"]):
     model.eval()
     
     all_outputs, all_targets = [], []
@@ -174,8 +199,12 @@ def compute_metrics(model, val_loader, cfg, loss_fns=["RMSE_E", "MAE_E", "RMSLE"
         for loss_name in loss_fns:
             loss_fn = get_loss_fn(loss_name)
             loss_fn_no_reduce = get_loss_fn(loss_name, "none")
-            metrics[loss_name] = loss_fn(all_outputs, all_targets).item()
-            no_reduce_metrics[loss_name] = loss_fn_no_reduce(all_outputs, all_targets).cpu().numpy().tolist()
+
+            metrics[f"{loss_name} eng"] = loss_fn(all_outputs[:, 0], all_targets[:, 0]).item()
+            if not loss_name.endswith("_E"):
+                metrics[f"{loss_name} pos"] = loss_fn(all_outputs[:, 1:3], all_targets[:, 1:3]).item()
+            
+            no_reduce_metrics[loss_name] = loss_fn_no_reduce(all_outputs[:, 0], all_targets[:, 0]).cpu().numpy()
 
     return all_outputs, all_targets, metrics, no_reduce_metrics
 
