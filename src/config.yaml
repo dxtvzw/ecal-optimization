@@ -77,4 +77,4 @@
 
     loss_fn_eng: "RMSE_E" # one of "RMSE_E", "MAE_E", "MSE", "MAE", "RMSLE", "None"
     loss_fn_pos: "RMSE"
-    eng_loss_weight: 0.5
+    eng_loss_weight: 0.0

@@ -1,0 +1,139 @@
+\documentclass[a4paper,12pt]{extarticle}
+\usepackage{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english,russian]{babel}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{fancyhdr}
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{colortbl}
+\usepackage{tikz}
+\usepackage{pgf}
+\usepackage{subcaption}
+\usepackage{listings}
+\usepackage{indentfirst}
+\usepackage[
+backend=biber,
+style=numeric,
+maxbibnames=99
+]{biblatex}
+\addbibresource{refs.bib}
+\usepackage[colorlinks,citecolor=blue,linkcolor=blue,bookmarks=false,hypertexnames=true, urlcolor=blue]{hyperref} 
+\usepackage{indentfirst}
+\usepackage{mathtools}
+\usepackage{booktabs}
+\usepackage[flushleft]{threeparttable}
+\usepackage{tablefootnote}
+
+\usepackage{chngcntr} % нумерация графиков и таблиц по секциям
+\counterwithin{table}{section}
+\counterwithin{figure}{section}
+
+\graphicspath{{graphics/}}%путь к рисункам
+
+\makeatletter
+% \renewcommand{\@biblabel}[1]{#1.} % Заменяем библиографию с квадратных скобок на точку:
+\makeatother
+
+% \geometry{left=2.5cm}% левое поле
+% \geometry{right=1.0cm}% правое поле
+\geometry{left=1.75cm}
+\geometry{right=1.75cm}
+
+\geometry{top=2.0cm}% верхнее поле
+\geometry{bottom=2.0cm}% нижнее поле
+\setlength{\parindent}{1.25cm}
+\renewcommand{\baselinestretch}{1.5} % междустрочный интервал
+
+
+\newcommand{\bibref}[3]{\hyperlink{#1}{#2 (#3)}} % biblabel, authors, year
+\addto\captionsrussian{\def\refname{Список литературы (или источников)}} 
+
+\renewcommand{\theenumi}{\arabic{enumi}}% Меняем везде перечисления на цифра.цифра
+\renewcommand{\labelenumi}{\arabic{enumi}}% Меняем везде перечисления на цифра.цифра
+\renewcommand{\theenumii}{.\arabic{enumii}}% Меняем везде перечисления на цифра.цифра
+\renewcommand{\labelenumii}{\arabic{enumi}.\arabic{enumii}.}% Меняем везде перечисления на цифра.цифра
+\renewcommand{\theenumiii}{.\arabic{enumiii}}% Меняем везде перечисления на цифра.цифра
+\renewcommand{\labelenumiii}{\arabic{enumi}.\arabic{enumii}.\arabic{enumiii}.}% Меняем везде перечисления на цифра.цифра
+
+\usepackage{glossaries}
+
+\makeglossaries
+
+\newacronym{emk}{ЭМК}{электромагнитный калориметр}
+\newacronym{ecal}{ECAL}{electromagnetic calorimeter}
+
+\begin{document}
+\input{title_vkr}% это титульный лист - выберите подходящий вам из имеющихся в проекте вариантов (kr - курсовая работа у 3 курса, vkr - выпускная квалификационная работа у 4 курса)
+\newpage
+\setcounter{page}{2}
+
+{
+	\hypersetup{linkcolor=black}
+	\tableofcontents
+}
+
+\newpage
+
+\newpage
+\section*{Аннотация}   % this is how to use russian
+В исследованиях фундаментальных частиц, точность и эффективность измерения метрик имеет первостепенное значение. Данное исследование представляет новый подход к оптимизации размеров датчиков в электромагнитных калориметрах (ЭМК) Большого адронного коллайдера (БАК) для точной реконструкции энергии и позиции фотонов. Используя методы глубинного обучения, особенно адаптированные из области компьютерного зрения, мы стремимся идентифицировать оптимальную конфигурацию матрицы датчиков, которая максимизирует точность реконструкции энергии и позиции, учитывая ограничения по стоимости. Введя архитектуру модели, способную адаптироваться к различным размерам датчиков, данное исследование рассматривает баланс между высоким разрешением измерений и экономической целесообразностью. Предварительные результаты показывают, что специально адаптированная модель глубокого обучения может значительно улучшить дизайн датчиков, предлагая многообещающий путь для будущих экспериментальных физических установок. Эта работа не только способствует текущему дискурсу по оптимизации датчиков, но и демонстрирует потенциал глубинного обучения в продвижении исследований в области физики частиц.
+
+\addcontentsline{toc}{section}{Аннотация}
+
+\section*{Ключевые слова}
+Физика элементарных частиц, оптимизация размера сенсоров, глубинное обучение, компьютерное зрение, реконструкция энергии фотонов, БАК, электромагнитные калориметры
+\pagebreak
+
+\section{Введение}
+kek~\cite{Belayneh_2020}
+
+\section{Обзор литературы}
+
+\subsubsection{Calorimetry with Deep Learning: Particle Simulation and Reconstruction for Collider Physics}
+
+This paper~\cite{Belayneh_2020} explores the utilization of deep learning for simulating and reconstructing particles in high-energy physics collisions. By training neural networks with detailed simulations of calorimeter showers, the authors demonstrate substantial improvements over existing algorithms in both simulation and reconstruction tasks. Their approach includes an end-to-end reconstruction network for particle identification and energy regression, and a generative network for modeling calorimeter showers. The networks show versatility across different detector geometries, presenting a fast, efficient alternative for particle shower simulation and reconstruction.
+
+\subsubsection{Towards a Computer Vision Particle Flow}
+
+This study~\cite{Di_Bello_2021} introduces a computer vision-based approach to Particle Flow (PFlow) algorithms, aiming to improve the reconstruction of neutral particle calorimeter energy deposits amidst large overlaps with charged particles. By leveraging deep learning techniques on calorimeter images, the authors achieve significant enhancements in distinguishing between neutral and charged particle deposits. Additionally, they employ super-resolution techniques to increase the granularity of calorimeter images, further refining the reconstruction process.
+
+\subsubsection{Reconstruction of Decays to Merged Photons Using End-to-End Deep Learning with Domain Continuation in the CMS Detector}
+
+This paper~\cite{PhysRevD.108.052002} presents an innovative machine learning technique for reconstructing decays of highly Lorentz-boosted particles, specifically focusing on the reconstruction of invariant mass in merged photon decays. By employing an end-to-end deep learning strategy with domain continuation, the authors bypass traditional rule-based reconstruction methods, enabling direct reconstruction of particle properties from minimally processed detector data. This technique showcases the potential of deep learning in resolving complex particle interactions, particularly in scenarios where photons are closely merged.
+
+\subsubsection{Novelty of Our Approach}
+
+Our research introduces a novel deep learning model designed to optimize sensor size for photon energy reconstruction in the LHC's ECAL, marking a distinct departure from the primary focus of the aforementioned studies. Unlike the general application of deep learning for particle identification, simulation, or reconstruction, our approach specifically targets the physical configuration of sensors, aiming to find an optimal balance between sensor resolution and cost-efficiency. This involves not only the application of deep learning to particle physics but also an innovative integration of model architecture adjustments to accommodate varying sensor sizes. Our work contributes a unique perspective by directly linking deep learning model performance with the practical considerations of sensor design and fabrication in high-energy physics experiments, thereby filling a gap in the current literature on the intersection of machine learning and experimental physics setup optimization.
+
+
+\section{Методология}
+
+\section{Постановка экспериментов}
+
+\section{Результаты}
+
+\section{Обсуждение}
+
+\section{Заключение}
+
+\section{Благодарности}
+
+\newpage 
+\printbibliography[heading=bibintoc] 
+
+% \begin{thebibliography}{0}
+% 	\bibitem{chirkova18}\hypertarget{chirkova18}{}
+% 	\href{https://arxiv.org/abs/1810.10927}
+% 	{Nadezhda Chirkova, Ekaterina Lobacheva, Dmitry Vetrov. Bayesian Compression for Natural Language Processing. In EMNLP 2018.}
+% \end{thebibliography}
+
+\newpage
+\appendix
+
+\section{Пример секции аппендикса}
+
+\end{document}
