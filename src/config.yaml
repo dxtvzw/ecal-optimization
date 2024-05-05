@@ -21,12 +21,12 @@
     # data_file: "64k_real_15x15.npz"
     # data_file: "500k_real_15x15.npz"
     # data_file: "64k_wpc_10x10.npz"
-    # data_file: "64k_wpc_10x10_v2.npz"
+    data_file: "64k_wpc_10x10_v2.npz"
     # data_file: "64k_wpc_15x15.npz"
     # data_file: "64k_wpc_20x20.npz"
     # data_file: "64k_wpc_25x25.npz"
     # data_file: "64k_wpc_30x30.npz"
-    data_file: "64k_wpc_40x40.npz"
+    # data_file: "64k_wpc_40x40.npz"
 
     checkpoint_dir: "checkpoints"
     checkpoint: "checkpoint.pth.tar"
@@ -43,7 +43,7 @@
     tag: "MyViT"
     use_checkpoint: "no" # one of "no", "last", "best"
     positive_eng: true
-    positive_pos: true
+    positive_pos: false
 
     n_scales: 8
     hidden_dim: 16
@@ -77,3 +77,4 @@
 
     loss_fn_eng: "RMSE_E" # one of "RMSE_E", "MAE_E", "MSE", "MAE", "RMSLE", "None"
     loss_fn_pos: "RMSE"
+    eng_loss_weight: 0.5

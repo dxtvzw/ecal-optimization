@@ -47,6 +47,8 @@ def train_fn(
     if cfg.training.use_amp:
         scaler = torch.cuda.amp.GradScaler()
 
+    alpha = cfg.training.eng_loss_weight
+
     logger.info("=" * 80)
 
     for epoch in range(1, cfg.training.num_epochs + 1):
@@ -72,7 +74,7 @@ def train_fn(
                     output = model(data)
                     loss_eng = criterion_eng(output[:, 0], trg[:, 0])
                     loss_pos = criterion_pos(output[:, 1:3], trg[:, 1:3])
-                    loss = 0.5 * loss_eng + 0.5 * loss_pos
+                    loss = alpha * loss_eng + (1 - alpha) * loss_pos
                 
                 train_total += loss.detach()
                 train_eng += loss_eng.detach()
@@ -85,7 +87,7 @@ def train_fn(
                 output = model(data)
                 loss_eng = criterion_eng(output[:, 0], trg[:, 0])
                 loss_pos = criterion_pos(output[:, 1:3], trg[:, 1:3])
-                loss = 0.5 * loss_eng + 0.5 * loss_pos
+                loss = alpha * loss_eng + (1 - alpha) * loss_pos
 
                 train_total += loss.detach()
                 train_eng += loss_eng.detach()
@@ -121,7 +123,7 @@ def train_fn(
                         output = model(data)
                         loss_eng = criterion_eng(output[:, 0], trg[:, 0])
                         loss_pos = criterion_pos(output[:, 1:3], trg[:, 1:3])
-                        loss = 0.5 * loss_eng + 0.5 * loss_pos
+                        loss = alpha * loss_eng + (1 - alpha) * loss_pos
 
                         val_total += loss.detach()
                         val_eng += loss_eng.detach()
@@ -130,7 +132,7 @@ def train_fn(
                     output = model(data)
                     loss_eng = criterion_eng(output[:, 0], trg[:, 0])
                     loss_pos = criterion_pos(output[:, 1:3], trg[:, 1:3])
-                    loss = 0.5 * loss_eng + 0.5 * loss_pos
+                    loss = alpha * loss_eng + (1 - alpha) * loss_pos
 
                     val_total += loss.detach()
                     val_eng += loss_eng.detach()
