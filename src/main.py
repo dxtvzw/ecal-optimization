@@ -1,5 +1,6 @@
 import wandb
 import logging
+import os
 
 from config import load_config
 from data import get_data
@@ -195,7 +196,7 @@ def train_fn(
         logger.info("=" * 80)
 
 
-if __name__ == "__main__":
+def main():
     cfg, cfg_dict = load_config()
 
     logging.basicConfig(level=logging.INFO)
@@ -208,11 +209,15 @@ if __name__ == "__main__":
             config=cfg_dict
         )
     
-    cfg.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    cfg.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     train_loader, val_loader = get_data(cfg, logger)
 
     model, optimizer, scheduler = get_model(cfg, logger)
+
+    trainable_params, all_params = number_of_weights(model)
+
+    logger.info(f"Number of trainable parameters: {trainable_params} || Number of all parameters: {all_params}")
 
     if wandb.run is not None:
         wandb.watch(model, log="all")
@@ -231,3 +236,9 @@ if __name__ == "__main__":
         cfg=cfg,
         logger=logger,
     )
+
+
+if __name__ == "__main__":
+    os.environ["CUDA_VISIBLE_DEVICES"] = os.environ["LOCAL_RANK"]
+    
+    main()

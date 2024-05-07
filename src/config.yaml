@@ -1,9 +1,9 @@
 ---
   logging:
     log_freq: 20
-    log_plot_freq: 50
+    log_plot_freq: 1000
     info_prints: true
-    wandb: false
+    wandb: true
 
   paths:
     # data_dir: "data"
@@ -43,7 +43,7 @@
     tag: "MyViT"
     use_checkpoint: "no" # one of "no", "last", "best"
     positive_eng: true
-    positive_pos: false
+    positive_pos: true
 
     n_scales: 8
     hidden_dim: 16
@@ -59,9 +59,9 @@
     ensemble:
       num_models: 2
       use_best: false
-  
+
   training:
-    num_epochs: 300
+    num_epochs: 100
     use_amp: false
 
     optimizer:
@@ -73,8 +73,8 @@
       tag: "WarmupCosineSchedule"
       step_size: 20
       gamma: 0.8
-      warmup_steps: 20
+      warmup_steps: 15
 
     loss_fn_eng: "RMSE_E" # one of "RMSE_E", "MAE_E", "MSE", "MAE", "RMSLE", "None"
     loss_fn_pos: "RMSE"
-    eng_loss_weight: 1.0
+    eng_loss_weight: 0.5

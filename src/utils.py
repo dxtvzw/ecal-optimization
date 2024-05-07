@@ -30,7 +30,9 @@ def save_checkpoint(state, is_best, cfg):
 
 
 def number_of_weights(nn):
-    return sum(p.numel() for p in nn.parameters() if p.requires_grad)
+    trainable_params = sum(p.numel() for p in nn.parameters() if p.requires_grad)
+    all_params = sum(p.numel() for p in nn.parameters())
+    return trainable_params, all_params
 
 
 def get_model_size(model):
