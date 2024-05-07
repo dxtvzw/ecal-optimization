@@ -9,7 +9,6 @@ from model import get_model
 from utils import number_of_weights, get_model_size
 from utils import Timer, save_checkpoint
 from utils import get_loss_fn, compute_metrics
-from utils import get_experiment_group_name
 
 import torch
 
@@ -218,17 +217,10 @@ def main():
     cfg.data.width = width
 
     if cfg.logging.wandb:
-        if cfg.experiment_id != 0:
-            wandb.init(
-                project="ECAL optimization",
-                group=get_experiment_group_name(cfg),
-                config=cfg_dict
-            )
-        else:
-            wandb.init(
-                project="ECAL optimization",
-                config=cfg_dict
-            )
+        wandb.init(
+            project="ECAL optimization",
+            config=cfg_dict
+        )
     
     cfg.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 

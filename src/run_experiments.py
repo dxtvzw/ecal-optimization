@@ -3,12 +3,24 @@ import subprocess
 import os
 import signal
 import copy
+import re
+
+
+def extract_dimensions(filename):
+    match = re.search(r'\d+x\d+', filename)
+    if match:
+        dimensions = match.group(0)
+        x, y = dimensions.split('x')
+        return int(x), int(y)
+    else:
+        return None
 
 
 proc_list = []
 
 
-def run_experiment(config_path):
+def run_experiment(config_path, group_name):
+    os.environ["WANDB_RUN_GROUP"] = group_name
     proc = subprocess.Popen(["torchrun", "--nproc_per_node", "8", "main.py", "--config", config_path])
     proc_list.append(proc)
     proc.wait()
@@ -49,7 +61,9 @@ def experiment_1(config):
             with open(temp_config_path, 'w') as temp_config_file:
                 yaml.safe_dump(cur_config, temp_config_file)
 
-            run_experiment(temp_config_path)
+            height, width = extract_dimensions(data_file)
+
+            run_experiment(temp_config_path, f"exp1_{model_tag}_{height}x{width}")
 
             os.remove(temp_config_path)
 
