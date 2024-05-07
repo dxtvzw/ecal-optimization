@@ -22,7 +22,7 @@ class Ensemble(nn.Module):
     
     def forward(self, x):
         batch_size = x.shape[0]
-        result = torch.zeros(batch_size, device=x.device)
+        result = torch.zeros((batch_size, 3), device=x.device)
         for model in self.models:
             result += model(x)
         result /= len(self.models)
@@ -65,7 +65,7 @@ def get_ensemble(cfg, logger):
         checkpoint = torch.load(checkpoint_path, map_location=cfg.device)
         model.load_state_dict(checkpoint['model'])
 
-        logger.info(f"Val loss: {checkpoint['val_loss']:0.4f}")
+        logger.info(f"Val total: {checkpoint['val_total']:0.4f}")
 
         all_models.append(model)
 
@@ -79,7 +79,8 @@ def eval_fn(
         train_loader,
         val_loader,
         model,
-        criterion,
+        criterion_eng,
+        criterion_pos,
         cfg,
         logger,
     ):
@@ -96,38 +97,55 @@ def eval_fn(
 
     timer = Timer()
 
+    alpha = cfg.training.eng_loss_weight
+
     model.eval()
     with torch.no_grad():
-        train_loss = torch.zeros((1,), device=cfg.device, dtype=torch.float32)
+        train_total = torch.zeros((1,), device=cfg.device, dtype=torch.float32)
+        train_eng = torch.zeros_like(train_total)
+        train_pos = torch.zeros_like(train_total)
 
         for data, trg in train_loader:
             data = data.to(cfg.device)
             trg = trg.to(cfg.device)
 
             output = model(data)
-            loss = criterion(output, trg)
+            loss_eng = criterion_eng(output[:, 0], trg[:, 0])
+            loss_pos = criterion_pos(output[:, 1:3], trg[:, 1:3])
+            loss = alpha * loss_eng + (1 - alpha) * loss_pos
 
-            train_loss += loss.detach()
+            train_total += loss.detach()
+            train_eng += loss_eng.detach()
+            train_pos += loss_pos.detach()
+
+        train_total = (train_total / len(train_loader)).item()
+        train_eng = (train_eng / len(train_loader)).item()
+        train_pos = (train_pos / len(train_loader)).item()
         
-        train_loss = (train_loss / len(train_loader)).item()
-        
-        val_loss = torch.zeros((1,), device=cfg.device, dtype=torch.float32)
+        val_total = torch.zeros((1,), device=cfg.device, dtype=torch.float32)
+        val_eng = torch.zeros_like(val_total)
+        val_pos = torch.zeros_like(val_total)
     
         for data, trg in val_loader:
             data = data.to(cfg.device)
             trg = trg.to(cfg.device)
 
-            if cfg.training.use_amp:
-                with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
-                    output = model(data)
-                    val_loss += criterion(output, trg).detach()
-            else:
-                output = model(data)
-                val_loss += criterion(output, trg).detach()
+            output = model(data)
+            loss_eng = criterion_eng(output[:, 0], trg[:, 0])
+            loss_pos = criterion_pos(output[:, 1:3], trg[:, 1:3])
+            loss = alpha * loss_eng + (1 - alpha) * loss_pos
+
+            val_total += loss.detach()
+            val_eng += loss_eng.detach()
+            val_pos += loss_pos.detach()
         
-        val_loss = (val_loss / len(val_loader)).item()
+        val_total = (val_total / len(val_loader)).item()
+        val_eng = (val_eng / len(val_loader)).item()
+        val_pos = (val_pos / len(val_loader)).item()
     
-    logger.info(f"Train loss: {train_loss:0.4f} || Val loss: {val_loss:0.4f}")
+    # logger.info(f"Train loss: {train_loss:0.4f} || Val loss: {val_loss:0.4f}")
+    logger.info(f"Train total: {train_total:0.4f} || Train eng: {train_eng:0.4f} || Train pos: {train_pos:0.4f}")
+    logger.info(f"Val total: {val_total:0.4f} || Val eng: {val_eng:0.4f} || Val pos: {val_pos:0.4f}")
 
     val_outputs, val_targets, metrics, no_reduce_metrics = compute_metrics(
         model=model,
@@ -153,13 +171,15 @@ if __name__ == "__main__":
 
     model = get_ensemble(cfg, logger)
 
-    criterion = get_loss_fn(cfg.training.loss_fn)
+    criterion_eng = get_loss_fn(cfg.training.loss_fn_eng)
+    criterion_pos = get_loss_fn(cfg.training.loss_fn_pos)
 
     eval_fn(
         train_loader=train_loader,
         val_loader=val_loader,
         model=model,
-        criterion=criterion,
+        criterion_eng=criterion_eng,
+        criterion_pos=criterion_pos,
         cfg=cfg,
         logger=logger,
     )

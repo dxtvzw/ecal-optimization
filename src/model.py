@@ -43,6 +43,34 @@ def custom_softplus(x, positive_eng=False, positive_pos=False):
     return CustomSoftplusFunction.apply(x, positive_eng, positive_pos)
 
 
+class SumModel(nn.Module):
+    def __init__(
+            self,
+            height=15,
+            width=15,
+            positive_eng=True,
+            positive_pos=True,
+            **kwargs
+        ) -> None:
+        super(SumModel, self).__init__()
+
+        self.height = height
+        self.width = width
+        self.positive_eng = positive_eng
+        self.positive_pos = positive_pos
+
+        self.fc1 = nn.Linear(1, 3)
+    
+    def forward(self, x):
+        batch_size = x.size(0)
+        x = x.view(batch_size, self.height * self.width)
+
+        x = self.fc1(x.sum(dim=1).unsqueeze(1))
+        
+        x = custom_softplus(x, self.positive_eng, self.positive_pos)
+        return x
+
+
 class SimpleModel(nn.Module):
     def __init__(
             self,
@@ -286,6 +314,7 @@ def get_model(cfg, logger, create_subdirs=True):
     model_params = namespace_to_dict(cfg.model)
 
     model_types = [
+        SumModel,
         SimpleModel,
         LinearModel,
         MyResnet18,

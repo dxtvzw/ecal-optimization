@@ -158,7 +158,7 @@ def train_fn(
                 f"Val eng: {val_eng:0.4f} || "
                 f"Val pos: {val_pos:0.4f}")
         
-        logger.info(f"Metrics: {pretty_metrics(metrics)}")
+        logger.info(f"Val metrics: {pretty_metrics(metrics)}")
         
         if wandb.run is not None:
             wandb.log({
@@ -185,6 +185,8 @@ def train_fn(
                 "optimizer": optimizer.state_dict(),
                 "scheduler": scheduler.state_dict() if scheduler is not None else None,
                 "val_total": val_total,
+                "val_eng": val_eng,
+                "val_pos": val_pos,
             },
             is_best=is_best,
             cfg=cfg,

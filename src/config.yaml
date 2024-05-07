@@ -3,7 +3,7 @@
     log_freq: 20
     log_plot_freq: 50
     info_prints: true
-    wandb: true
+    wandb: false
 
   paths:
     # data_dir: "data"
@@ -57,7 +57,7 @@
     attention_dropout: 0.0
 
     ensemble:
-      num_models: 10
+      num_models: 2
       use_best: false
   
   training:
@@ -77,4 +77,4 @@
 
     loss_fn_eng: "RMSE_E" # one of "RMSE_E", "MAE_E", "MSE", "MAE", "RMSLE", "None"
     loss_fn_pos: "RMSE"
-    eng_loss_weight: 0.0
+    eng_loss_weight: 1.0
