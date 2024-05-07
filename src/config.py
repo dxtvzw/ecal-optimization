@@ -11,7 +11,7 @@ def parse(d):
     return x
 
 
-def load_config(config_file='config.yaml'):
+def load_config(config_file="config.yaml"):
     with open(config_file, 'r') as f:
         cfg_dict = yaml.load(f, Loader=yaml.FullLoader)
 
