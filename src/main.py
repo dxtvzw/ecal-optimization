@@ -1,9 +1,10 @@
 import wandb
 import logging
 import os
+import argparse
 
 from config import load_config
-from data import get_data
+from data import get_data, extract_dimensions
 from model import get_model
 from utils import number_of_weights, get_model_size
 from utils import Timer, save_checkpoint
@@ -197,11 +198,23 @@ def train_fn(
 
 
 def main():
-    cfg, cfg_dict = load_config()
+    def parse_arguments():
+        parser = argparse.ArgumentParser(description="Training script")
+        parser.add_argument("--config", type=str, default="config.yaml", help="Path to config file")
+        return parser.parse_args()
+
+    args = parse_arguments()
+
+    cfg, cfg_dict = load_config(args.config)
 
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
     logger.propagate = cfg.logging.info_prints
+
+    height, width = extract_dimensions(cfg.paths.data_file)
+
+    cfg.data.height = height
+    cfg.data.width = width
 
     if cfg.logging.wandb:
         wandb.init(

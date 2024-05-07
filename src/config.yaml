@@ -1,6 +1,8 @@
 ---
+  experiment_id: 1
+
   logging:
-    log_freq: 20
+    log_freq: 50
     log_plot_freq: 1000
     info_prints: true
     wandb: true
@@ -40,7 +42,7 @@
     normalize_position: true
   
   model:
-    tag: "MyViT"
+    tag: "MyResnet18"
     use_checkpoint: "no" # one of "no", "last", "best"
     positive_eng: true
     positive_pos: true

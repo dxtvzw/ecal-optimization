@@ -218,3 +218,12 @@ def namespace_to_dict(obj):
         return [namespace_to_dict(item) for item in obj]
     else:
         return obj
+
+
+def get_experiment_group_name(cfg):
+    group_name = f"exp{cfg.experiment_id}"
+    if cfg.experiment_id == 1:
+        group_name += f"_{cfg.model.tag}_{cfg.data.height}x{cfg.data.width}"
+    else:
+        raise RuntimeError(f"Unknown experiment_id: {cfg.experiment_id}")
+    return group_name
