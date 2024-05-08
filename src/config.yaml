@@ -3,7 +3,7 @@
     log_freq: 50
     log_plot_freq: -1
     info_prints: true
-    wandb: true
+    wandb: false
 
   paths:
     # data_dir: "data"
@@ -22,9 +22,9 @@
     # data_file: "500k_real_15x15.npz"
     # data_file: "64k_wpc_10x10.npz"
     # data_file: "64k_wpc_10x10_v2.npz"
-    data_file: "64k_wpc_15x15.npz"
+    # data_file: "64k_wpc_15x15.npz"
     # data_file: "64k_wpc_20x20.npz"
-    # data_file: "64k_wpc_25x25.npz"
+    data_file: "64k_wpc_25x25.npz"
     # data_file: "64k_wpc_30x30.npz"
     # data_file: "64k_wpc_40x40.npz"
 

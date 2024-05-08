@@ -157,6 +157,8 @@ def eval_fn(
 
     logger.info("=" * 80)
 
+    return val_total, val_outputs, val_targets, metrics, no_reduce_metrics
+
 
 if __name__ == "__main__":
     cfg, cfg_dict = load_config()
