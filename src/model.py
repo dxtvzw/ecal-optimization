@@ -185,6 +185,8 @@ class MyCNN(nn.Module):
             height=15,
             width=15,
             hidden_dim=100,
+            num_layers=3,
+            scale_mult=8,
             positive_eng=True,
             positive_pos=True,
             **kwargs
@@ -194,10 +196,15 @@ class MyCNN(nn.Module):
         self.width = width
         self.positive_eng = positive_eng
         self.positive_pos = positive_pos
+
+        last_dim = 1
+        self.conv_layers = []
+        for i in range(num_layers):
+            self.conv_layers.append(nn.Conv2d(last_dim, last_dim * scale_mult, kernel_size=3, padding=1))
+            self.conv_layers.append(nn.ReLU())
+            last_dim *= scale_mult
         
-        self.conv1 = nn.Conv2d(1, 16, kernel_size=3, padding=1)
-        self.conv2 = nn.Conv2d(16, 32, kernel_size=3, padding=1)
-        self.conv3 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
+        self.conv_layers = nn.Sequential(*self.conv_layers)
         
         self.pool = nn.MaxPool2d(2, 2)
         
@@ -209,20 +216,22 @@ class MyCNN(nn.Module):
 
     def _mock_forward_pass(self, width, height):
         dummy_x = torch.zeros((1, 1, width, height))
-        dummy_x = self.pool(F.relu(self.conv1(dummy_x)))
-        dummy_x = self.pool(F.relu(self.conv2(dummy_x)))
-        dummy_x = self.pool(F.relu(self.conv3(dummy_x)))
+        dummy_x = self.conv_layers(dummy_x)
+        dummy_x = self.pool(dummy_x)
         self._to_linear = int(torch.numel(dummy_x))
         
     def forward(self, x):
-        x = self.pool(F.relu(self.conv1(x)))
-        x = self.pool(F.relu(self.conv2(x)))
-        x = self.pool(F.relu(self.conv3(x)))
+        batch_size = x.size(0)
+        x = x.view(batch_size, 1, self.height, self.width)
+        x = self.conv_layers(x)
+        x = self.pool(x)
         
         x = x.view(-1, self._to_linear)
         
         x = F.relu(self.fc1(x))
         x = self.fc2(x)
+
+        # print("LOOOK", batch_size, x.size())
 
         x = custom_softplus(x, self.positive_eng, self.positive_pos)
 

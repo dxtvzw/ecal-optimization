@@ -4,6 +4,7 @@ import os
 import signal
 import copy
 import re
+import argparse
 
 
 def extract_dimensions(filename):
@@ -68,15 +69,66 @@ def experiment_1(config):
             os.remove(temp_config_path)
 
 
+def experiment_2(config):
+    model_tags = [
+        "MyViT",
+    ]
+
+    data_files = [
+        "64k_wpc_10x10_v2.npz",
+        "64k_wpc_15x15.npz",
+        "64k_wpc_20x20.npz",
+        "64k_wpc_25x25.npz",
+        "64k_wpc_30x30.npz",
+        "64k_wpc_40x40.npz",
+    ]
+
+    eng_losses = [
+        "RMSE_E",
+        "MAE_E",
+        "RMSLE",
+        "RMSE",
+    ]
+
+    for model_tag in model_tags:
+        for data_file in data_files:
+            for loss_fn_eng in eng_losses:
+                cur_config = copy.deepcopy(config)
+                cur_config['model']['tag'] = model_tag
+                cur_config['paths']['data_file'] = data_file
+                cur_config['training']['loss_fn_eng'] = loss_fn_eng
+
+                temp_config_path = 'temp_config.yaml'
+                with open(temp_config_path, 'w') as temp_config_file:
+                    yaml.safe_dump(cur_config, temp_config_file)
+
+                height, width = extract_dimensions(data_file)
+
+                run_experiment(temp_config_path, f"exp2_{height}x{width}_{loss_fn_eng}")
+
+                os.remove(temp_config_path)
+
+
 def main():
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
 
+    def parse_arguments():
+        parser = argparse.ArgumentParser(description="Experiment runner")
+        parser.add_argument("--exp_id", type=int, required=True, help="Experiment id to run")
+        return parser.parse_args()
+
+    args = parse_arguments()
+
     with open('config.yaml', 'r') as config_file:
         config = yaml.safe_load(config_file)
 
-    if config['experiment_id'] == 1:
+    if args.exp_id == 1:
         experiment_1(config)
+    elif args.exp_id == 2:
+        experiment_2(config)
+    else:
+        raise ValueError(f"Invalid experiment id: {args.exp_id}")
 
 
 if __name__ == "__main__":
