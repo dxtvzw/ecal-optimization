@@ -36,8 +36,11 @@
     batch_size: 512
     num_workers: 4
     test_size: 0.2
-    use_transforms: false
     normalize_position: true
+
+    transforms:
+      use_flips: true
+      use_rotation: true
   
   model:
     tag: "MyViT"

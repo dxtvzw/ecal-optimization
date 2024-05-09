@@ -149,6 +149,7 @@ def experiment_4(config):
     ]
 
     data_files = [
+        ""
         "64k_wpc_25x25.npz",
     ]
 
@@ -181,6 +182,40 @@ def experiment_4(config):
                         os.remove(temp_config_path)
 
 
+def experiment_5(config):
+    model_tags = [
+        "MyViT",
+    ]
+
+    data_files = [
+        "64k_wpc_15x15.npz",
+        "64k_wpc_25x25.npz",
+    ]
+
+    use_flips = [True, False]
+    use_rotation = [True, False]
+
+    for model_tag in model_tags:
+        for data_file in data_files:
+            for use_flip in use_flips:
+                for use_rot in use_rotation:
+                    cur_config = copy.deepcopy(config)
+                    cur_config['model']['tag'] = model_tag
+                    cur_config['paths']['data_file'] = data_file
+                    cur_config['data']['transforms']['use_flips'] = use_flip
+                    cur_config['data']['transforms']['use_rotation'] = use_rot
+
+                    temp_config_path = 'temp_config.yaml'
+                    with open(temp_config_path, 'w') as temp_config_file:
+                        yaml.safe_dump(cur_config, temp_config_file)
+
+                    height, width = extract_dimensions(data_file)
+
+                    run_experiment(temp_config_path, f"exp5_{height}x{width}_{use_flip}_{use_rot}")
+
+                    os.remove(temp_config_path)
+
+
 def main():
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
@@ -203,6 +238,8 @@ def main():
         experiment_3(config)
     elif args.exp_id == 4:
         experiment_4(config)
+    elif args.exp_id == 5:
+        experiment_5(config)
     else:
         raise ValueError(f"Invalid experiment id: {args.exp_id}")
 

@@ -10,6 +10,7 @@ import random
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 from torchvision.transforms import v2
+import torch.nn as nn
 
 from sklearn.model_selection import train_test_split
 
@@ -68,7 +69,7 @@ class MyDataset(Dataset):
         data = self.X[index]
         trg = self.y[index]
         if self.transform is not None:
-            data = self.transform(data)
+            data, trg = self.transform(data, trg)
         return data, trg
 
 
@@ -88,6 +89,57 @@ class Normalizer:
     def fit_transform(self, arr: np.array):
         self.fit(arr)
         return self.transform(arr)
+
+
+class MyRandomHorizontalFlip(nn.Module):
+    def __init__(self, p=0.5):
+        super().__init__()
+        self.p = p
+    
+    def forward(self, x, y):
+        assert x.shape[-1] % 2 == 1, "The shape of the image must be odd"
+
+        if random.random() < self.p:
+            x = x.flip(-1)
+            y[2] = 1 - y[2]
+        return x, y
+
+
+class MyRandomVerticalFlip(nn.Module):
+    def __init__(self, p=0.5):
+        super().__init__()
+        self.p = p
+    
+    def forward(self, x, y):
+        assert x.shape[-1] % 2 == 1, "The shape of the image must be odd"
+
+        if random.random() < self.p:
+            x = x.flip(-2)
+            y[1] = 1 - y[1]
+        return x, y
+
+
+class MyRandomRotation(nn.Module):
+    def __init__(self):
+        super().__init__()
+    
+    def forward(self, x, y):
+        assert x.shape[-1] % 2 == 1, "The shape of the image must be odd"
+        k = torch.randint(0, 4, (1,)).item()
+        x = torch.rot90(x, k, (1, 2))
+        if k == 0:
+            new_y1, new_y2 = y[1], y[2]
+        elif k == 1:
+            new_y1, new_y2 = 1 - y[2], y[1]
+        elif k == 2:
+            new_y1, new_y2 = 1 - y[1], 1 - y[2]
+        elif k == 3:
+            new_y1, new_y2 = y[2], 1 - y[1]
+        new_y1 = torch.clone(new_y1)
+        new_y2 = torch.clone(new_y2)
+        y[1] = new_y1
+        y[2] = new_y2
+        return x, y
 
 
 def get_data(cfg, logger):
@@ -118,12 +170,14 @@ def get_data(cfg, logger):
         y_train[:, 2] = y_normalizer.transform(y_train[:, 2])
         y_val[:, 2] = y_normalizer.transform(y_val[:, 2])
 
-    train_transform = v2.Compose([
-        # v2.RandomResizedCrop(size=(height, width), antialias=None),
-        v2.RandomHorizontalFlip(p=0.5),
-        v2.RandomVerticalFlip(p=0.5),
-        # v2.RandomRotation(degrees=(0, 90)),
-    ]) if cfg.data.use_transforms else None
+    train_transforms = []
+    if cfg.data.transforms.use_flips:
+        train_transforms.append(MyRandomHorizontalFlip(p=0.5))
+        train_transforms.append(MyRandomVerticalFlip(p=0.5))
+    if cfg.data.transforms.use_rotation:
+        train_transforms.append(MyRandomRotation())
+
+    train_transform = v2.Compose(train_transforms) if train_transforms else None
 
     train_dataset = MyDataset(
         torch.tensor(X_train, dtype=torch.float32),
