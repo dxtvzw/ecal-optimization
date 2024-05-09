@@ -3,7 +3,7 @@
     log_freq: 50
     log_plot_freq: -1
     info_prints: true
-    wandb: false
+    wandb: true
 
   paths:
     # data_dir: "data"
