@@ -62,7 +62,10 @@ maxbibnames=99
 % Мои пакеты
 \usepackage{tabularx}
 \usepackage{booktabs}
+\usepackage{pifont}
 
+\newcommand{\cmark}{\ding{51}}
+\newcommand{\xmark}{\ding{55}}
 
 \begin{document}
 \input{title_vkr}% это титульный лист - выберите подходящий вам из имеющихся в проекте вариантов (kr - курсовая работа у 3 курса, vkr - выпускная квалификационная работа у 4 курса)
@@ -286,6 +289,29 @@ ResNet, Vision Transformer, Image augmentations
     \caption{}
     \label{graph:model_params}
 \end{figure}
+
+\begin{table}[ht]
+	\footnotesize
+	\centering
+	\begin{tabular}{cc|cccc|cccc}
+		\toprule
+		{} & {} & \multicolumn{8}{c}{\textsf{Размер матрицы}} \\
+		\cmidrule(lr){3-10}
+        {} & {} & \multicolumn{4}{c}{$\mathsf{15 \times 15}$} & \multicolumn{4}{c}{$\mathsf{25 \times 25}$} \\
+		\midrule
+        \textsf{Перевороты} & \textsf{Повороты} & $\mathcal{L}_{\mathsf{eng}}^{\mathsf{train}}$ & $\mathcal{L}_{\mathsf{pos}}^{\mathsf{train}}$ & $\mathcal{L}_{\mathsf{eng}}^{\mathsf{val}}$ & $\mathcal{L}_{\mathsf{pos}}^{\mathsf{val}}$ & $\mathcal{L}_{\mathsf{eng}}^{\mathsf{train}}$ & $\mathcal{L}_{\mathsf{pos}}^{\mathsf{train}}$ & $\mathcal{L}_{\mathsf{eng}}^{\mathsf{val}}$ & $\mathcal{L}_{\mathsf{pos}}^{\mathsf{val}}$ \\
+        \midrule
+
+        \xmark & \xmark & $\mathsf{0.0182}$ & $\mathsf{0.0255}$ & $\mathsf{0.0217}$ & $\mathsf{0.0269}$ & $\mathsf{0.0181}$ & $\mathsf{0.0291}$ & $\mathsf{0.0192}$ & $\mathsf{0.0294}$ \\
+        \cmark & \xmark & $\mathsf{0.0186}$ & $\mathsf{0.0259}$ & $\mathsf{0.0194}$ & $\mathsf{0.0269}$ & $\mathsf{0.0186}$ & $\mathsf{0.0295}$ & $\mathsf{0.0191}$ & $\mathsf{0.0293}$ \\
+        \xmark & \cmark & $\mathsf{0.0185}$ & $\mathsf{0.0258}$ & $\mathsf{0.0193}$ & $\mathsf{0.0267}$ & $\mathsf{0.0186}$ & $\mathsf{0.0296}$ & $\mathsf{0.0189}$ & $\mathsf{0.0293}$ \\
+        \cmark & \cmark & $\mathsf{0.0185}$ & $\mathsf{0.0258}$ & $\mathsf{0.0192}$ & $\mathsf{0.0267}$ & $\mathsf{0.0186}$ & $\mathsf{0.0295}$ & $\mathsf{0.0189}$ & $\mathsf{0.0292}$ \\
+        
+		\bottomrule
+	\end{tabular}
+    \caption{}
+	\label{table:augmentations}
+\end{table}
 
 \section{Обсуждение}
 
