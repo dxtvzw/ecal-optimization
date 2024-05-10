@@ -330,8 +330,14 @@ def get_model(cfg, logger, create_subdirs=True):
     )
     if create_subdirs:
         os.makedirs(cfg.paths.checkpoint_dir, exist_ok=True)
-        
+    
     cur_run_id = len(list(os.walk(cfg.paths.checkpoint_dir)))
+    if cfg.model.checkpoint.use:
+        if cfg.model.checkpoint.run_id == -1:
+            cur_run_id -= 1
+        else:
+            cur_run_id = cfg.model.checkpoint.run_id
+    
     cfg.paths.checkpoint_dir = os.path.join(
         cfg.paths.checkpoint_dir,
         f"run_{cur_run_id}",
@@ -394,12 +400,7 @@ def get_model(cfg, logger, create_subdirs=True):
     else:
         raise RuntimeError(f"Invalid scheduler tag: {cfg.scheduler.tag}")
 
-    checkpoint_path = None
-
-    if cfg.model.use_checkpoint == "last" and os.path.isfile(os.path.join(cfg.paths.checkpoint_dir, cfg.paths.checkpoint)):
-        checkpoint_path = os.path.join(cfg.paths.checkpoint_dir, cfg.paths.checkpoint)
-    elif cfg.model.use_checkpoint == "best" and os.path.isfile(os.path.join(cfg.paths.checkpoint_dir, cfg.paths.best_checkpoint)):
-        checkpoint_path = os.path.join(cfg.paths.checkpoint_dir, cfg.paths.best_checkpoint)
+    checkpoint_path = os.path.join(cfg.paths.checkpoint_dir, cfg.paths.checkpoint) if cfg.model.checkpoint.use else None
 
     if checkpoint_path is not None:
         logger.info(f"Loading model checkpoint from {checkpoint_path}")
@@ -408,7 +409,24 @@ def get_model(cfg, logger, create_subdirs=True):
         model.load_state_dict(checkpoint['model'])
         optimizer.load_state_dict(checkpoint['optimizer'])
         scheduler.load_state_dict(checkpoint['scheduler'])
+        logger.info(f"Val total: {checkpoint['val_total']:0.4f} || Val eng: {checkpoint['val_eng']:0.4f} || Val pos: {checkpoint['val_pos']:0.4f}")
 
+        if cfg.model.checkpoint.freeze_body:
+            assert cfg.model.tag == "MyViT", "Freezing body is only supported for MyViT model"
+            for param in model.model.parameters():
+                param.requires_grad = False
+
+            for param in model.model.heads.parameters():
+                param.requires_grad = True
+            
+            logger.info("Freezing body of the model and only training the heads")
+
+        cfg.paths.checkpoint_dir = os.path.dirname(cfg.paths.checkpoint_dir)
+        cur_run_id = len(list(os.walk(cfg.paths.checkpoint_dir)))
+        cfg.paths.checkpoint_dir = os.path.join(
+            cfg.paths.checkpoint_dir,
+            f"run_{cur_run_id}",
+        )
 
     logger.info(f"Successfully loaded the model || {timer()}")
 
