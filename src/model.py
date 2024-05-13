@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from torchvision.models import resnet18, VisionTransformer
 
 import math
+import warnings
 
 from utils import Timer
 from utils import namespace_to_dict
@@ -43,32 +44,73 @@ def custom_softplus(x, positive_eng=False, positive_pos=False):
     return CustomSoftplusFunction.apply(x, positive_eng, positive_pos)
 
 
-class SumModel(nn.Module):
+class AnaModel(nn.Module):
     def __init__(
             self,
             height=15,
             width=15,
             positive_eng=True,
-            positive_pos=True,
+            positive_pos=False,
+            sensor_size=60.6,
+            normalize_position=True,
             **kwargs
         ) -> None:
-        super(SumModel, self).__init__()
+        super(AnaModel, self).__init__()
 
         self.height = height
         self.width = width
         self.positive_eng = positive_eng
         self.positive_pos = positive_pos
+        self.sensor_size = sensor_size
+        self.normalize_position = normalize_position
 
-        self.fc1 = nn.Linear(1, 3)
+        if self.positive_pos:
+            warnings.warn("AnaModel performs poorly with <positive_pos> so avoid using it here")
+
+        assert self.height == self.width
+
+        self.cell_size = self.sensor_size / self.height
+
+        self.cell_pos_impl = torch.zeros(self.height, self.width, 2)
+        for i in range(self.height):
+            for j in range(self.width):
+                self.cell_pos_impl[i, j, 0] = i * self.cell_size + self.cell_size / 2
+                self.cell_pos_impl[i, j, 1] = j * self.cell_size + self.cell_size / 2
+        self.register_buffer('cell_pos', self.cell_pos_impl)
+
+        self.center_impl = torch.tensor([self.sensor_size / 2, self.sensor_size / 2])
+        self.register_buffer('center', self.center_impl)
+
+        self.fc1 = nn.Linear(1, 1)
+        self.fc2 = nn.Linear(2, 2)
     
     def forward(self, x):
         batch_size = x.size(0)
-        x = x.view(batch_size, self.height * self.width)
 
-        x = self.fc1(x.sum(dim=1).unsqueeze(1))
+        x = x.view(batch_size, self.height * self.width)
+        eng_res = self.fc1(x.sum(dim=1).unsqueeze(1))
+
+        x = x.view(batch_size, self.height, self.width)
+        total_eng = x.sum(dim=(1, 2))
+
+        coordinates_tensor = self.cell_pos.unsqueeze(0).expand(x.shape[0], -1, -1, -1)
+        weighted_coordinates = x.unsqueeze(-1) * coordinates_tensor
+
+        pos_res = torch.sum(weighted_coordinates, dim=(1, 2)) / total_eng.unsqueeze(-1)
+        pos_res = pos_res - self.center.unsqueeze(0)
+
+        if self.normalize_position:
+            if self.height % 2 == 0:
+                pos_res = pos_res / self.cell_size
+            else:
+                pos_res = (pos_res + self.cell_size / 2) / self.cell_size
         
-        x = custom_softplus(x, self.positive_eng, self.positive_pos)
-        return x
+        pos_res = self.fc2(pos_res)
+
+        result = torch.cat((eng_res, pos_res), dim=1)
+        
+        result = custom_softplus(result, self.positive_eng, self.positive_pos)
+        return result
 
 
 class SimpleModel(nn.Module):
@@ -110,7 +152,7 @@ class SimpleModel(nn.Module):
         return x
 
 
-class LinearModel(nn.Module):
+class LinReg(nn.Module):
     def __init__(
             self,
             height=15,
@@ -120,7 +162,7 @@ class LinearModel(nn.Module):
             eps=1e-9,
             **kwargs
         ) -> None:
-        super(LinearModel, self).__init__()
+        super(LinReg, self).__init__()
 
         self.height = height
         self.width = width
@@ -138,7 +180,7 @@ class LinearModel(nn.Module):
         return x
 
 
-class MyResnet18(nn.Module):
+class Resnet18(nn.Module):
     def __init__(
             self,
             height=15,
@@ -148,7 +190,7 @@ class MyResnet18(nn.Module):
             positive_pos=True,
             **kwargs
         ) -> None:
-        super(MyResnet18, self).__init__()
+        super(Resnet18, self).__init__()
 
         self.height = height
         self.width = width
@@ -179,7 +221,7 @@ class MyResnet18(nn.Module):
         return x
 
 
-class MyCNN(nn.Module):
+class CNN(nn.Module):
     def __init__(
             self,
             height=15,
@@ -191,7 +233,7 @@ class MyCNN(nn.Module):
             positive_pos=True,
             **kwargs
         ):
-        super(MyCNN, self).__init__()
+        super(CNN, self).__init__()
         self.height = height
         self.width = width
         self.positive_eng = positive_eng
@@ -238,7 +280,7 @@ class MyCNN(nn.Module):
         return x
 
 
-class MyViT(nn.Module):
+class ViT(nn.Module):
     def __init__(
             self,
             height=15,
@@ -254,7 +296,7 @@ class MyViT(nn.Module):
             attention_dropout=0.01,
             **kwargs
         ):
-        super(MyViT, self).__init__()
+        super(ViT, self).__init__()
         self.height = height
         self.width = width
         self.positive_eng = positive_eng
@@ -344,14 +386,16 @@ def get_model(cfg, logger, create_subdirs=True):
     )
 
     model_params = namespace_to_dict(cfg.model)
+    model_params["sensor_size"] = cfg.data.sensor_size
+    model_params["normalize_position"] = cfg.data.normalize_position
 
     model_types = [
-        SumModel,
+        AnaModel,
         SimpleModel,
-        LinearModel,
-        MyResnet18,
-        MyCNN,
-        MyViT,
+        LinReg,
+        Resnet18,
+        CNN,
+        ViT,
     ]
 
     model = None

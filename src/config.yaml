@@ -33,6 +33,7 @@
     best_checkpoint: "best.pth.tar"
   
   data:
+    sensor_size: 60.6 # total sensor size in centimeters
     batch_size: 512
     num_workers: 4
     test_size: 0.2
@@ -43,14 +44,14 @@
       use_rotation: true
   
   model:
-    tag: "MyViT"
+    tag: "AnaModel"
     checkpoint:
       use: false
       run_id: -1
       freeze_body: false
     
     positive_eng: true
-    positive_pos: true
+    positive_pos: false # actually bad thing to do, avoid turning it on for simple models
 
     hidden_dim: 16
     dropout: 0.0

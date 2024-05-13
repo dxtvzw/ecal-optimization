@@ -216,6 +216,9 @@ def main():
     cfg.data.height = height
     cfg.data.width = width
 
+    if cfg.model.positive_pos:
+        assert cfg.data.normalize_position, "Model always outputs positive values while target positions are not positive"
+
     if cfg.logging.wandb:
         wandb.init(
             project="ECAL optimization",

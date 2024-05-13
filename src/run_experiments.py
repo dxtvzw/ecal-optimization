@@ -36,11 +36,11 @@ def signal_handler(sig, frame):
 
 def experiment_1(config):
     model_tags = [
-        "SumModel",
-        "LinearModel",
-        "MyResnet18",
-        "MyCNN",
-        "MyViT",
+        "AnaModel",
+        "LinReg",
+        "Resnet18",
+        "CNN",
+        "ViT",
     ]
 
     data_files = [
@@ -71,7 +71,7 @@ def experiment_1(config):
 
 def experiment_2(config):
     model_tags = [
-        "MyViT",
+        "ViT",
     ]
 
     data_files = [
@@ -111,7 +111,7 @@ def experiment_2(config):
 
 def experiment_3(config):
     model_tags = [
-        "MyViT",
+        "ViT",
     ]
 
     data_files = [
@@ -145,7 +145,7 @@ def experiment_3(config):
 
 def experiment_4(config):
     model_tags = [
-        "MyViT",
+        "ViT",
     ]
 
     data_files = [
@@ -184,7 +184,7 @@ def experiment_4(config):
 
 def experiment_5(config):
     model_tags = [
-        "MyViT",
+        "ViT",
     ]
 
     data_files = [
