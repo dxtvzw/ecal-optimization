@@ -170,6 +170,11 @@ def get_data(cfg, logger):
         y_train[:, 2] = y_normalizer.transform(y_train[:, 2])
         y_val[:, 2] = y_normalizer.transform(y_val[:, 2])
 
+    if (cfg.data.transforms.use_flips or cfg.data.transforms.use_rotation) and height % 2 == 0:
+        logger.info("The sensor shape is even, so the flips and rotations will not be applied")
+        cfg.data.transforms.use_flips = False
+        cfg.data.transforms.use_rotation = False
+
     train_transforms = []
     if cfg.data.transforms.use_flips:
         train_transforms.append(MyRandomHorizontalFlip(p=0.5))

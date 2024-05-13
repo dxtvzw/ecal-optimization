@@ -1,0 +1,1 @@
+# Sensor Size Optimization for Particle Physics

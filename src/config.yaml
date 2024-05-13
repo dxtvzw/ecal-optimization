@@ -3,7 +3,7 @@
     log_freq: 50
     log_plot_freq: -1
     info_prints: true
-    wandb: false
+    wandb: true
 
   paths:
     # data_dir: "data"
@@ -11,7 +11,7 @@
     # data_file: "0001_500k_real_spectra_15x15_spot.root"
     # data_file: "0001_64k_wpc_10x10_spot.root"
     # data_file: "0001_64k_wpc_10x10_spot_v2.root"
-    data_file: "0001_64k_wpc_15x15_spot.root"
+    # data_file: "0001_64k_wpc_15x15_spot.root"
     # data_file: "0001_64k_wpc_20x20_spot.root"
     # data_file: "0001_64k_wpc_25x25_spot_rs42.root"
     # data_file: "0001_64k_wpc_30x30_spot_rs42.root"
@@ -44,14 +44,14 @@
       use_rotation: true
   
   model:
-    tag: "AnaModel"
+    tag: "ViT"
     checkpoint:
       use: false
       run_id: -1
       freeze_body: false
     
     positive_eng: true
-    positive_pos: false # actually bad thing to do, avoid turning it on for simple models
+    positive_pos: true
 
     hidden_dim: 16
     dropout: 0.0
