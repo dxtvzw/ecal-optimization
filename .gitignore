@@ -285,3 +285,4 @@ undergraduate_practice/signed/
 src/wandb
 *__pycache__*
 src/data_numpy/
+report/data/project.csv
