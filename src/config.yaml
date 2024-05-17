@@ -3,7 +3,7 @@
     log_freq: 50
     log_plot_freq: -1
     info_prints: true
-    wandb: true
+    wandb: false
 
   paths:
     # data_dir: "data"
@@ -44,7 +44,7 @@
       use_rotation: true
   
   model:
-    tag: "ViT"
+    tag: "CNN"
     checkpoint:
       use: false
       run_id: -1

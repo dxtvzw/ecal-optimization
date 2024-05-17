@@ -235,8 +235,8 @@ def main():
 
     logger.info(f"Number of trainable parameters: {trainable_params} || Number of all parameters: {all_params}")
 
-    if wandb.run is not None:
-        wandb.watch(model, log="all")
+    # if wandb.run is not None:
+    #     wandb.watch(model, log="all")
 
     criterion_eng = get_loss_fn(cfg.training.loss_fn_eng)
     criterion_pos = get_loss_fn(cfg.training.loss_fn_pos)
