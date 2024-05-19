@@ -6,7 +6,7 @@ import argparse
 from config import load_config
 from data import get_data, extract_dimensions
 from model import get_model
-from utils import number_of_weights, get_model_size
+from utils import number_of_weights
 from utils import Timer, save_checkpoint
 from utils import get_loss_fn, compute_metrics
 
