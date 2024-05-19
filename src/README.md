@@ -56,14 +56,14 @@ Replace `<experiment_id>` with the ID of the experiment you want to run.
 Training: Alternatively, run the main training process using `main.py`. If you have multiple GPUs available, you can use `torchrun` to run simultaneous independent training processes. Specify the number of processes with the `--nproc_per_node` flag (each process will use a single separate GPU available):
 
 ```shell
-torchrun --nproc_per_node <num_processes> main.py
+torchrun --nproc_per_node <num_processes> main.py [[--config path/to/config]]
 ```
 
-Replace `<num_processes>` with the number of processes you want to run.
+Replace `<num_processes>` with the number of processes you want to run. You can add optional `--config` argument with a path to another config file.
 
 Monitor Training with `Wandb`: Throughout the training process, metrics and logs are automatically logged to Wandb. You can monitor the training progress, visualize metrics, and compare experiments on the Wandb dashboard.
 
-Most of the experiments were recorded using `wandb`, the runs can be viewed using the following [link](https://wandb.ai/dxtvzw/ECAL%20optimization).
+Most of the experiments were recorded using `Wandb`, the runs can be viewed using the following [link](https://wandb.ai/dxtvzw/ECAL%20optimization).
 
 Evaluate Models: After training or running experiments, you can evaluate model performance using `ensemble.py`. This script creates basic ensembles of multiple model runs and performs inference for metric evaluation.
 
