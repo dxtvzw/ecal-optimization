@@ -81,14 +81,17 @@
 \begin{frame}{Постановка задачи}
     \begin{figure}
         \centering
-        \subfloat{\includegraphics[width=0.45\textwidth]{../report/graphics/ecal_big.jpg}}\qquad
-        \subfloat{\includegraphics[width=0.45\textwidth]{../report/graphics/shower.png}}
-        \caption{Электромагнитный калориметр PADME и симуляция электромагнитного ливня с помощью GEANT4.}
+        \includegraphics[width=0.7\textwidth]{images/high_energy_physics.jpg}
     \end{figure}
 \end{frame}
 
 \begin{frame}{Актуальность работы}
-    
+    \begin{figure}
+        \centering
+        \subfloat{\includegraphics[width=0.45\textwidth]{../report/graphics/ecal_big.jpg}}\qquad
+        \subfloat{\includegraphics[width=0.45\textwidth]{../report/graphics/shower.png}}
+        \caption{Электромагнитный калориметр PADME и симуляция электромагнитного ливня с помощью GEANT4.}
+    \end{figure}
 \end{frame}
 
 \section{Обзор литературы}
@@ -119,18 +122,19 @@
 \section{Методология}
 
 \begin{frame}{Данные}
-    Данные сгенерированы с помощью GEANT4. Каждый элемент состоит из:
-
-    \begin{itemize}
-        \item Матрица неотрицательных чисел (размерность матрицы  может быть от $10 \times 10$ до $40 \times 40$)
-        \item Исходная энергия фотона
-        \item Положение входной точки фотона
-    \end{itemize}
+    \begin{block}{}
+        Данные сгенерированы с помощью GEANT4. Каждый элемент состоит из:
+        \begin{itemize}
+            \item Матрица неотрицательных чисел (размерность матрицы  может быть от $10 \times 10$ до $40 \times 40$)
+            \item Исходная энергия фотона (от $1$ до $100$ ГэВ)
+            \item Положение входной точки фотона (в центральной ячейке калориметра)
+        \end{itemize}
+    \end{block}
 
     \begin{figure}
         \centering
-        \subfloat{\includegraphics[width=0.4\textwidth]{../report/graphics/data_10x10.png}}\hskip4pt
-        \subfloat{\includegraphics[width=0.4\textwidth]{../report/graphics/data_10x10_zoomed.png}}
+        \subfloat{\includegraphics[width=0.38\textwidth]{../report/graphics/data_10x10.png}}\hskip4pt
+        \subfloat{\includegraphics[width=0.38\textwidth]{../report/graphics/data_10x10_zoomed.png}}
     \end{figure}
 \end{frame}
 
@@ -284,9 +288,13 @@
 \section{Заключение}
 
 \begin{frame}{Заключение}
-    \begin{block}{Пункты на защиту}
+    \begin{block}{Результаты работы}
         \begin{itemize}
-            \item 
+            \item Исследование и сравнение моделей глубинного обучения
+            \item Оптимизация метрик и функций потерь
+            \item Анализ влияния размера модели и аугментации данных
+            \item Достижение высокой точности реконструкции
+            \item Практическое применение и перспективы
         \end{itemize}
     \end{block}
 \end{frame}
